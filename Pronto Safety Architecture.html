@@ -1,0 +1,1947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A Safety Architecture for Pronto at Scale · Built by Archit Kannan</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300&display=swap');
+
+  :root {
+    --green: #04B565;
+    --green-dark: #038A4D;
+    --green-mid: #05D677;
+    --page-bg: #F2F5F9;
+    --panel-bg: #FFFFFF;
+    --panel-alt: #F8FAFB;
+    --header-bg: #0F2318;
+    --ink: #1A2E23;
+    --ink-2: #374B3E;
+    --muted: #6B8070;
+    --muted-light: #9DB5A5;
+    --wash: #E6F9F1;
+    --green-wash: #EAF7F2;
+    --warn: #D97706;
+    --warn-bg: #FFFBEB;
+    --danger: #DC2626;
+    --danger-bg: #FEF2F2;
+    --border: #E2E8E4;
+    --border-green: rgba(4, 181, 101, 0.2);
+    --purple: #7C3AED;
+    --purple-bg: #F5F3FF;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  .bullet-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: 6px;
+  }
+  .bullet-list li {
+    font-size: 13.5px;
+    color: var(--ink-2);
+    line-height: 1.5;
+    padding-left: 14px;
+    position: relative;
+  }
+  .bullet-list li::before {
+    content: "–";
+    position: absolute;
+    left: 0;
+    color: var(--muted-light);
+    font-weight: 600;
+  }
+  .bullet-list.limit-list li::before { color: var(--danger); }
+  .bullet-list.covers-list li::before { color: var(--green); }
+
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: var(--page-bg);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--header-bg);
+    border-bottom: 3px solid var(--green);
+    padding: 28px 48px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+  .appendix-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    color: var(--green);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #FFFFFF;
+    letter-spacing: -0.02em;
+  }
+  .header-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: rgba(255,255,255,0.45);
+    letter-spacing: 0.1em;
+    text-align: right;
+  }
+  .header-meta span { color: var(--green); }
+  .header-subtitle {
+    font-size: 14px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.65;
+    max-width: 640px;
+    margin-top: 12px;
+  }
+
+  /* NAV TABS */
+  .nav-tabs {
+    background: var(--panel-bg);
+    border-bottom: 1px solid var(--border);
+    padding: 0 48px;
+    display: flex;
+    gap: 0;
+    box-shadow: var(--shadow);
+  }
+  .nav-tab {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--muted);
+    padding: 16px 22px;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.18s ease;
+    white-space: nowrap;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+  }
+  .nav-tab:hover {
+    color: var(--ink);
+    background: var(--green-wash);
+    border-bottom-color: rgba(4,181,101,0.3);
+  }
+  .nav-tab.active {
+    color: var(--green-dark);
+    border-bottom-color: var(--green);
+    background: var(--green-wash);
+  }
+
+  /* MAIN CONTENT */
+  .main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px 48px 48px;
+  }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* SECTION HEADER */
+  .section-header { margin-bottom: 24px; }
+  .section-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--green-dark);
+    margin-bottom: 8px;
+  }
+  .section-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+  }
+  .section-desc {
+    font-size: 15px;
+    color: var(--muted);
+    line-height: 1.6;
+    max-width: 860px;
+  }
+
+  /* INSIGHT STRIP */
+  .insight-strip {
+    background: var(--green-wash);
+    border: 1px solid var(--border-green);
+    border-left: 4px solid var(--green);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+  }
+  .insight-strip-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--green-dark);
+    margin-bottom: 6px;
+  }
+  .insight-strip-text {
+    font-size: 15px;
+    color: var(--ink-2);
+    line-height: 1.6;
+  }
+  .insight-strip-text strong { color: var(--green-dark); }
+
+  .warn-strip {
+    background: var(--warn-bg);
+    border: 1px solid rgba(217,119,6,0.25);
+    border-left: 4px solid var(--warn);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+  }
+  .warn-strip-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--warn);
+    margin-bottom: 6px;
+  }
+  .warn-strip-text {
+    font-size: 15px;
+    color: var(--ink-2);
+    line-height: 1.6;
+  }
+  .warn-strip-text strong { color: #92400E; }
+
+  /* ASYMMETRY */
+  .asymmetry-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .asym-card {
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 22px 24px;
+    box-shadow: var(--shadow);
+  }
+  .asym-card-pro { border-top: 3px solid var(--green); }
+  .asym-card-cust { border-top: 3px solid var(--danger); }
+  .asym-header {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 14px;
+  }
+  .asym-header.green { color: var(--green-dark); }
+  .asym-header.red { color: var(--danger); }
+  .asym-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-size: 14.5px;
+    color: var(--ink-2);
+    line-height: 1.5;
+  }
+  .asym-item:last-child { margin-bottom: 0; }
+  .asym-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    margin-top: 5px;
+    flex-shrink: 0;
+  }
+  .asym-dot.green { background: var(--green); }
+  .asym-dot.red { background: var(--danger); }
+  .asym-empty {
+    font-size: 30px;
+    font-weight: 800;
+    color: var(--danger);
+    margin-bottom: 6px;
+  }
+  .asym-empty-label { font-size: 14px; color: var(--muted); }
+
+  /* GAP MAP */
+  .gap-map {
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    margin-bottom: 20px;
+  }
+  .gap-map-header {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    background: var(--header-bg);
+  }
+  .gap-map-corner {
+    padding: 14px 20px;
+    border-right: 1px solid rgba(255,255,255,0.1);
+  }
+  .gap-map-corner-text {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: rgba(255,255,255,0.4);
+    text-transform: uppercase;
+  }
+  .gap-map-failure-headers {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .failure-header {
+    padding: 14px 12px;
+    border-right: 1px solid rgba(255,255,255,0.08);
+    text-align: center;
+  }
+  .failure-header:last-child { border-right: none; }
+  .failure-header-text {
+    font-family: 'DM Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    color: rgba(255,255,255,0.6);
+    text-transform: uppercase;
+    line-height: 1.4;
+  }
+  .gap-map-row {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    border-top: 1px solid var(--border);
+  }
+  .gap-map-row:hover { background: #FAFCFB; }
+  .measure-cell {
+    padding: 16px 20px;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .measure-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 3px;
+  }
+  .measure-status { font-size: 12px; color: var(--muted); }
+  .gap-cells {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .gap-cell {
+    padding: 16px 12px;
+    border-right: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .gap-cell:last-child { border-right: none; }
+  .cell-covers {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--green-wash); border: 1.5px solid var(--green);
+    display: flex; align-items: center; justify-content: center; font-size: 14px;
+  }
+  .cell-partial {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--warn-bg); border: 1.5px solid var(--warn);
+    display: flex; align-items: center; justify-content: center; font-size: 14px;
+  }
+  .cell-gap {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--danger-bg); border: 1.5px solid rgba(220,38,38,0.3);
+    display: flex; align-items: center; justify-content: center; font-size: 14px;
+  }
+  .gap-map-legend {
+    display: flex;
+    gap: 20px;
+    padding: 12px 20px;
+    background: var(--panel-alt);
+    border-top: 1px solid var(--border);
+    align-items: center;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .legend-dot {
+    width: 14px; height: 14px;
+    border-radius: 50%; flex-shrink: 0;
+  }
+
+  /* FLOW / GATE */
+  .gate-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-bottom: 24px;
+  }
+  .gate-item {
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    gap: 0;
+  }
+  .gate-spine {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .gate-node {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--green); color: white;
+    font-size: 17px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(4,181,101,0.3);
+  }
+  .gate-node.phase2 {
+    background: var(--purple);
+    box-shadow: 0 2px 8px rgba(124,58,237,0.3);
+  }
+  .gate-node.phase3 {
+    background: var(--warn);
+    box-shadow: 0 2px 8px rgba(217,119,6,0.3);
+  }
+  .gate-line {
+    width: 2px; flex: 1;
+    background: linear-gradient(to bottom, var(--green), rgba(4,181,101,0.15));
+    min-height: 20px; margin: 4px 0;
+  }
+  .gate-line.phase2 {
+    background: linear-gradient(to bottom, var(--purple), rgba(124,58,237,0.15));
+  }
+  .gate-content { padding: 0 0 24px 16px; }
+  .gate-card {
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 22px;
+    box-shadow: var(--shadow);
+  }
+  .gate-card-title {
+    font-size: 16px; font-weight: 700;
+    color: var(--ink); margin-bottom: 4px;
+  }
+  .gate-card-timing {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px; letter-spacing: 0.15em;
+    text-transform: uppercase; color: var(--green-dark);
+    margin-bottom: 14px;
+  }
+  .gate-card-timing.purple { color: var(--purple); }
+  .gate-card-body {
+    font-size: 14.5px; color: var(--ink-2);
+    line-height: 1.6; margin-bottom: 14px;
+  }
+  .gate-card-body strong { color: var(--ink); font-weight: 500; }
+  .gate-detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .gate-detail {
+    background: var(--panel-alt);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 12px 14px;
+  }
+  .gate-detail-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10.5px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--muted);
+    margin-bottom: 5px;
+  }
+  .gate-detail-value {
+    font-size: 14px; color: var(--ink-2); line-height: 1.5;
+  }
+  .gate-detail-value strong { color: var(--ink); font-weight: 500; }
+  .gate-outcome { display: flex; gap: 8px; margin-top: 12px; }
+  .outcome-pass {
+    flex: 1; background: var(--green-wash);
+    border: 1px solid var(--border-green);
+    border-radius: 6px; padding: 10px 12px;
+    font-size: 13.5px; color: var(--green-dark); line-height: 1.4;
+  }
+  .outcome-warn {
+    flex: 1; background: var(--warn-bg);
+    border: 1px solid rgba(217,119,6,0.25);
+    border-radius: 6px; padding: 10px 12px;
+    font-size: 13.5px; color: #92400E; line-height: 1.4;
+  }
+  .outcome-fail {
+    flex: 1; background: var(--danger-bg);
+    border: 1px solid rgba(220,38,38,0.2);
+    border-radius: 6px; padding: 10px 12px;
+    font-size: 13.5px; color: var(--danger); line-height: 1.4;
+  }
+  .outcome-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; letter-spacing: 0.1em;
+    text-transform: uppercase; margin-bottom: 4px; opacity: 0.8;
+  }
+
+  /* BETWEEN FLOW */
+  .between-flow { display: flex; flex-direction: column; gap: 8px; }
+  .bflow-step {
+    display: flex; align-items: flex-start; gap: 12px;
+    background: var(--panel-alt); border: 1px solid var(--border);
+    border-radius: 7px; padding: 12px 14px;
+  }
+  .bflow-num {
+    font-family: 'DM Mono', monospace; font-size: 13px;
+    color: var(--green-dark); background: var(--green-wash);
+    border: 1px solid var(--border-green); border-radius: 4px;
+    padding: 3px 7px; flex-shrink: 0; margin-top: 1px;
+  }
+  .bflow-text { font-size: 14.5px; color: var(--ink-2); line-height: 1.5; }
+  .bflow-text strong { color: var(--ink); font-weight: 500; }
+
+  /* STEP CARDS */
+  .step-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .step-card {
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    box-shadow: var(--shadow);
+  }
+  .step-card-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 10.5px; letter-spacing: 0.15em;
+    text-transform: uppercase; color: var(--muted);
+    margin-bottom: 5px;
+  }
+  .step-card-title {
+    font-size: 15px; font-weight: 700;
+    color: var(--ink); margin-bottom: 10px;
+  }
+  .step-card-body {
+    font-size: 14px; color: var(--ink-2); line-height: 1.55;
+  }
+  .step-card-body strong { color: var(--ink); font-weight: 500; }
+
+  /* FLOW COMPARE */
+  .flow-compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .flow-col {
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .flow-col-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .flow-col-header.as-is { background: var(--danger-bg); border-bottom-color: rgba(220,38,38,0.15); }
+  .flow-col-header.proposed { background: var(--green-wash); border-bottom-color: var(--border-green); }
+  .flow-col-title {
+    font-size: 14px; font-weight: 700;
+  }
+  .flow-col-title.red { color: var(--danger); }
+  .flow-col-title.green { color: var(--green-dark); }
+  .flow-col-sub {
+    font-size: 12.5px; color: var(--muted); margin-top: 2px;
+  }
+  .flow-steps { padding: 14px 18px; display: flex; flex-direction: column; gap: 8px; }
+  .flow-step {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: 13.5px; color: var(--ink-2); line-height: 1.5;
+  }
+  .flow-step-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px; color: var(--muted);
+    background: var(--panel-alt);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 2px 6px; flex-shrink: 0; margin-top: 1px;
+  }
+  .flow-step-num.new {
+    background: var(--green-wash);
+    border-color: var(--border-green);
+    color: var(--green-dark);
+  }
+  .flow-step strong { color: var(--ink); font-weight: 500; }
+  .flow-step .gap-tag {
+    display: inline-block;
+    font-family: 'DM Mono', monospace; font-size: 10px;
+    background: var(--danger-bg); color: var(--danger);
+    border: 1px solid rgba(220,38,38,0.2);
+    border-radius: 3px; padding: 1px 5px;
+    margin-left: 4px; vertical-align: middle;
+  }
+  .flow-step .new-tag {
+    display: inline-block;
+    font-family: 'DM Mono', monospace; font-size: 10px;
+    background: var(--green-wash); color: var(--green-dark);
+    border: 1px solid var(--border-green);
+    border-radius: 3px; padding: 1px 5px;
+    margin-left: 4px; vertical-align: middle;
+  }
+
+  /* MISCONDUCT / SCORING TIERS */
+  .misconduct-section {
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px; overflow: hidden;
+    box-shadow: var(--shadow); margin-bottom: 20px;
+  }
+  /* COLLAPSIBLE CARDS */
+  .collapsible-header {
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 22px;
+    background: var(--panel-alt);
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s ease;
+  }
+  .collapsible-header:hover { background: var(--green-wash); }
+  .collapsible-header-left { flex: 1; }
+  .collapsible-chevron {
+    font-size: 12px;
+    color: var(--muted);
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+    margin-left: 16px;
+  }
+  .collapsible-chevron.open { transform: rotate(180deg); }
+  .collapsible-body {
+    display: none;
+    animation: fadeUp 0.2s ease;
+  }
+  .collapsible-body.open { display: block; }
+
+  .ops-card-header.collapsible-header {
+    padding: 16px 20px;
+  }
+
+  .misconduct-header {
+    padding: 16px 22px;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel-alt);
+  }
+  .misconduct-title { font-size: 16px; font-weight: 700; color: var(--ink); }
+  .misconduct-sub { font-size: 13px; color: var(--muted); margin-top: 3px; }
+  .misconduct-sub { font-size: 13.5px; color: var(--muted); margin-top: 3px; }
+  .misconduct-row {
+    display: grid;
+    grid-template-columns: 160px 1fr 1fr;
+    border-bottom: 1px solid var(--border);
+  }
+  .misconduct-row:last-child { border-bottom: none; }
+  .misconduct-trigger {
+    padding: 18px 20px; border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .trigger-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10.5px; letter-spacing: 0.12em;
+    text-transform: uppercase; margin-bottom: 5px;
+  }
+  .trigger-label.warn { color: var(--warn); }
+  .trigger-label.danger { color: var(--danger); }
+  .trigger-label.severe { color: #7C1D1D; }
+  .trigger-desc { font-size: 14px; color: var(--ink-2); line-height: 1.4; }
+  .misconduct-action { padding: 18px 20px; border-right: 1px solid var(--border); }
+  .misconduct-result { padding: 18px 20px; }
+  .action-title { font-size: 14.5px; font-weight: 500; color: var(--ink); margin-bottom: 6px; }
+  .action-detail { font-size: 13.5px; color: var(--muted); line-height: 1.5; }
+
+  /* TRUST TIERS */
+  .trust-tier-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 10px; margin-bottom: 20px;
+  }
+  .trust-card {
+    background: var(--panel-bg); border: 1px solid var(--border);
+    border-radius: 10px; padding: 18px; box-shadow: var(--shadow);
+    text-align: center;
+  }
+  .trust-badge {
+    display: inline-block;
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 4px 12px; border-radius: 20px;
+    margin-bottom: 12px; font-weight: 500;
+  }
+  .trust-badge.green {
+    background: var(--green-wash); color: var(--green-dark);
+    border: 1px solid var(--border-green);
+  }
+  .trust-badge.amber {
+    background: var(--warn-bg); color: var(--warn);
+    border: 1px solid rgba(217,119,6,0.3);
+  }
+  .trust-badge.red {
+    background: var(--danger-bg); color: var(--danger);
+    border: 1px solid rgba(220,38,38,0.3);
+  }
+  .trust-signals { text-align: left; margin-bottom: 12px; }
+  .trust-signal-item {
+    font-size: 13.5px; color: var(--ink-2); line-height: 1.5;
+    margin-bottom: 4px; padding-left: 10px; position: relative;
+  }
+  .trust-signal-item::before { content: '•'; position: absolute; left: 0; color: var(--muted); }
+  .trust-action {
+    font-size: 13.5px; padding: 8px 10px;
+    border-radius: 6px; line-height: 1.4; text-align: left;
+  }
+  .trust-action.green { background: var(--green-wash); color: var(--green-dark); }
+  .trust-action.amber { background: var(--warn-bg); color: #92400E; }
+  .trust-action.red { background: var(--danger-bg); color: var(--danger); }
+
+  /* OPERATIONAL CARDS */
+  .ops-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  .ops-card {
+    background: var(--panel-bg); border: 1px solid var(--border);
+    border-radius: 10px; overflow: hidden; box-shadow: var(--shadow);
+  }
+  .ops-card-header {
+    padding: 16px 20px; border-bottom: 1px solid var(--border);
+    background: var(--panel-alt);
+  }
+  .ops-card-eyebrow {
+    font-family: 'DM Mono', monospace; font-size: 10.5px;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 4px;
+  }
+  .ops-card-title { font-size: 16px; font-weight: 700; color: var(--ink); }
+  .ops-card-body { padding: 18px 20px; }
+
+  /* PROTOCOL TIMELINE */
+  .protocol-timeline { display: flex; flex-direction: column; gap: 0; }
+  .protocol-step {
+    display: grid; grid-template-columns: 72px 1fr;
+    gap: 12px; align-items: start;
+    padding-bottom: 14px; position: relative;
+  }
+  .protocol-step:last-child { padding-bottom: 0; }
+  .protocol-step::before {
+    content: ''; position: absolute;
+    left: 35px; top: 28px; bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--border-green), transparent);
+  }
+  .protocol-step:last-child::before { display: none; }
+  .protocol-time {
+    font-family: 'DM Mono', monospace; font-size: 12px;
+    font-weight: 500; color: var(--green-dark);
+    background: var(--green-wash); border: 1px solid var(--border-green);
+    border-radius: 5px; padding: 5px 6px; text-align: center;
+    white-space: normal; word-break: break-word; min-width: 60px;
+  }
+  .protocol-action { font-size: 14.5px; color: var(--ink-2); line-height: 1.5; padding-top: 4px; }
+  .protocol-action strong { color: var(--ink); font-weight: 500; }
+
+  /* PHASE BADGES */
+  .phase-badge {
+    display: inline-block;
+    font-family: 'DM Mono', monospace; font-size: 10px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 2px 8px; border-radius: 3px; margin-bottom: 8px;
+  }
+  .phase-badge.p1 { background: var(--green-wash); color: var(--green-dark); border: 1px solid var(--border-green); }
+  .phase-badge.p2 { background: var(--purple-bg); color: var(--purple); border: 1px solid rgba(124,58,237,0.2); }
+  .phase-badge.p3 { background: var(--warn-bg); color: var(--warn); border: 1px solid rgba(217,119,6,0.25); }
+
+  /* SOURCE FOOTER */
+  .source-footer {
+    font-family: 'DM Mono', monospace; font-size: 12px;
+    color: var(--muted); line-height: 1.6;
+    border-top: 1px solid var(--border);
+    padding-top: 20px; margin-top: 8px;
+  }
+
+  /* SIGNAL ROWS */
+  .signal-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+  .signal-row {
+    display: flex; align-items: flex-start; gap: 12px;
+    background: var(--panel-alt); border: 1px solid var(--border);
+    border-radius: 7px; padding: 12px 14px;
+  }
+  .signal-label {
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    color: var(--green-dark); background: var(--green-wash);
+    border: 1px solid var(--border-green); border-radius: 3px;
+    padding: 3px 8px; flex-shrink: 0; white-space: nowrap; margin-top: 1px;
+  }
+  .signal-label.purple {
+    color: var(--purple); background: var(--purple-bg);
+    border-color: rgba(124,58,237,0.2);
+  }
+  .signal-text { font-size: 14px; color: var(--ink-2); line-height: 1.5; }
+  .signal-text strong { color: var(--ink); font-weight: 500; }
+
+  /* COMMITMENT BOX */
+  .commitment-box {
+    background: var(--header-bg);
+    border: 1px solid rgba(4,181,101,0.3);
+    border-radius: 10px;
+    padding: 24px 28px;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+  .commitment-box-label {
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--green); margin-bottom: 12px;
+  }
+  .commitment-box-text {
+    font-size: 18px; font-weight: 700; color: #FFFFFF;
+    line-height: 1.5; letter-spacing: -0.01em; margin-bottom: 8px;
+  }
+  .commitment-box-sub {
+    font-size: 14px; color: rgba(255,255,255,0.55); line-height: 1.6;
+  }
+
+  /* GAP CARDS */
+  .gap-cards-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+  .gap-card {
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+  }
+  .gap-card-existing { border-top: 3px solid var(--muted-light); }
+  .gap-card-gap { border-top: 3px solid var(--danger); }
+  .gap-card-header {
+    padding: 16px 18px 12px;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel-alt);
+  }
+  .gap-card-status {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+  .gap-card-status.existing { color: var(--muted); }
+  .gap-card-status.gap { color: var(--danger); }
+  .gap-card-title {
+    font-size: 15px; font-weight: 700;
+    color: var(--ink); margin-bottom: 3px;
+  }
+  .gap-card-scope {
+    font-family: 'DM Mono', monospace;
+    font-size: 10.5px; color: var(--muted-light);
+    letter-spacing: 0.05em;
+  }
+  .gap-card-body {
+    padding: 14px 18px;
+    display: flex; flex-direction: column;
+    gap: 12px; flex: 1;
+  }
+  .gap-card-row { display: flex; flex-direction: column; gap: 5px; }
+  .gap-card-row-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .gap-card-row-label.good { color: var(--green-dark); }
+  .gap-card-row-label.bad { color: var(--danger); }
+  .gap-card-row-text {
+    font-size: 13px; color: var(--ink-2); line-height: 1.55;
+  }
+  .gap-card-row-text strong { color: var(--ink); font-weight: 600; }
+
+  /* GAP CARD BULLET LISTS */
+  .gap-bullets {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: 5px;
+    padding: 0;
+  }
+  .gap-bullets li {
+    font-size: 12.5px;
+    line-height: 1.5;
+    padding-left: 16px;
+    position: relative;
+  }
+  .gap-bullets.covers li { color: var(--ink-2); }
+  .gap-bullets.gaps li { color: #6B2020; }
+  .gap-bullets.covers li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: var(--green-dark);
+    font-weight: 700;
+    font-size: 11px;
+  }
+  .gap-bullets.gaps li::before {
+    content: "✗";
+    position: absolute;
+    left: 0;
+    color: var(--danger);
+    font-weight: 700;
+    font-size: 11px;
+  }
+
+  /* JOURNEY TIMELINE */
+  .journey-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-bottom: 24px;
+  }
+
+  .journey-step {
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    gap: 0;
+    position: relative;
+  }
+
+  .journey-spine {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 18px;
+  }
+
+  .journey-node {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px; font-weight: 500;
+    flex-shrink: 0; z-index: 1;
+  }
+
+  .journey-node.quiet {
+    background: var(--panel-alt);
+    border: 1.5px solid var(--border);
+    color: var(--muted);
+  }
+
+  .journey-node.gap {
+    background: var(--danger-bg);
+    border: 1.5px solid rgba(220,38,38,0.35);
+    color: var(--danger);
+  }
+
+  .journey-node.intervention {
+    background: var(--green);
+    border: 1.5px solid var(--green-dark);
+    color: white;
+    box-shadow: 0 2px 6px rgba(4,181,101,0.25);
+  }
+
+  .journey-thread {
+    width: 2px; flex: 1;
+    min-height: 12px;
+    margin: 3px 0;
+  }
+
+  .journey-thread.quiet { background: var(--border); }
+  .journey-thread.gap { background: linear-gradient(to bottom, rgba(220,38,38,0.3), var(--border)); }
+  .journey-thread.intervention { background: linear-gradient(to bottom, var(--green), rgba(4,181,101,0.15)); }
+
+  .journey-body {
+    padding: 10px 0 10px 16px;
+  }
+
+  /* quiet step — minimal */
+  .journey-quiet {
+    font-size: 13.5px;
+    color: var(--muted);
+    line-height: 1.5;
+    padding: 10px 0;
+  }
+
+  /* gap step */
+  .journey-gap-row {
+    background: var(--danger-bg);
+    border: 1px solid rgba(220,38,38,0.18);
+    border-left: 3px solid var(--danger);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 2px;
+  }
+  .journey-gap-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; letter-spacing: 0.15em;
+    text-transform: uppercase; color: var(--danger);
+    margin-bottom: 4px;
+  }
+  .journey-gap-text {
+    font-size: 13.5px; color: #7F1D1D; line-height: 1.5;
+  }
+  .journey-gap-text strong { color: var(--danger); font-weight: 600; }
+
+  /* intervention step */
+  .journey-intervention-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 2px;
+  }
+
+  .journey-before {
+    background: var(--danger-bg);
+    border: 1px solid rgba(220,38,38,0.18);
+    border-left: 3px solid var(--danger);
+    border-radius: 8px;
+    padding: 12px 16px;
+  }
+
+  .journey-after {
+    background: var(--green-wash);
+    border: 1px solid var(--border-green);
+    border-left: 3px solid var(--green);
+    border-radius: 8px;
+    padding: 12px 16px;
+  }
+
+  .journey-col-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; letter-spacing: 0.15em;
+    text-transform: uppercase; margin-bottom: 5px;
+  }
+  .journey-col-label.red { color: var(--danger); }
+  .journey-col-label.green { color: var(--green-dark); }
+
+  .journey-col-title {
+    font-size: 14px; font-weight: 700;
+    color: var(--ink); margin-bottom: 4px;
+  }
+  .journey-col-body {
+    font-size: 13px; color: var(--ink-2); line-height: 1.55;
+  }
+  .journey-col-body.red-text { color: #7F1D1D; }
+
+  .intervention-tag {
+    display: inline-block;
+    font-family: 'DM Mono', monospace; font-size: 10px;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    background: var(--green); color: white;
+    border-radius: 3px; padding: 2px 7px;
+    margin-top: 7px;
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .section.active { animation: fadeUp 0.25s ease; }
+
+  @media (max-width: 900px) {
+    .header { padding: 20px 24px; }
+    .nav-tabs { padding: 0 24px; }
+    .main { padding: 24px; }
+    .asymmetry-grid, .ops-grid, .flow-compare, .step-row, .gap-cards-grid { grid-template-columns: 1fr; }
+    .trust-tier-grid { grid-template-columns: 1fr; }
+    .misconduct-row { grid-template-columns: 1fr; }
+    .gap-map-failure-headers { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div>
+    <div class="appendix-tag">Built by Archit Kannan</div>
+    <h1>A Safety Architecture for Pronto at Scale</h1>
+    <div class="header-subtitle">The professional is verified. The home she walks into is not.<br> <br>This artefact documents the customer-side safety gap and recommends a set of interventions that builds accountability and creates the data foundation for a safer platform at scale.</div>
+  </div>
+  <div class="header-meta">
+    <div>All inputs from verified public sources · <span>May 2026</span></div>
+  </div>
+</div>
+
+<!-- NAV TABS -->
+<div class="nav-tabs">
+  <button class="nav-tab active" onclick="showTab(0)">What is broken?</button>
+  <button class="nav-tab" onclick="showTab(1)">4 immediate interventions</button>
+  <button class="nav-tab" onclick="showTab(2)">As-is vs proposed flow</button>
+  <button class="nav-tab" onclick="showTab(3)">Safety response playbook</button>
+</div>
+
+<div class="main">
+
+<!-- ===================== -->
+<!-- TAB 0: WHAT IS BROKEN -->
+<!-- ===================== -->
+<div class="section active" id="tab-0">
+
+  <div class="section-header">
+    <div class="section-eyebrow">The starting point</div>
+    <div class="section-title">The professional earns her trust. The customer assumes theirs.</div>
+    <div class="section-desc">Pronto's supply side is the most rigorously verified in the category. Its demand side has no equivalent.<br> <br>A customer can create an account with a mobile number, declare any name and any address, and request a verified woman professional enter a private residence, with the platform having no meaningful visibility into the environment she is entering.</div>
+  </div>
+
+  <div class="insight-strip">
+    <div class="insight-strip-label">The most important evidence</div>
+    <div class="insight-strip-text">Women professionals have already developed informal safety heuristics to compensate. Some call customers before a booking to check whether a woman will be present at the residence. If no woman is present, they may decline. <br> <br><strong>This is a pronto professional-created workaround for what must ideally be a platform-level check.</strong><br> <br> <i>Source: Reuters, 14 Apr 2026</i></div>
+  </div>
+
+  <div class="asymmetry-grid">
+    <div class="asym-card asym-card-pro">
+      <div class="asym-header green">The professional — fully verified</div>
+      <div class="asym-item"><div class="asym-dot green"></div>Police verification completed before onboarding</div>
+      <div class="asym-item"><div class="asym-dot green"></div>Government ID checked at Pronto Centre</div>
+      <div class="asym-item"><div class="asym-dot green"></div>Training and conduct standards applied</div>
+      <div class="asym-item"><div class="asym-dot green"></div>Identity confirmed before every deployment</div>
+    </div>
+    <div class="asym-card asym-card-cust">
+      <div class="asym-header red">The customer — entirely unverified</div>
+      <div class="asym-empty">Phone number</div>
+      <div class="asym-empty-label">No identity check.No address verification.<br> <br>No household context.No accountability commitment.</div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:14px">
+    <div style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-bottom:5px">Customer identity — current state</div>
+    <div style="font-size:18px;font-weight:700;color:var(--ink);letter-spacing:-0.01em">Four existing methods to establish customer identity and location. <span style="color:var(--danger)">Each falling short with critical limitations.</span></div>
+  </div>
+
+  <div class="gap-cards-grid">
+
+    <div class="gap-card gap-card-existing">
+      <div class="gap-card-header">
+        <div class="gap-card-status existing">Existing</div>
+        <div class="gap-card-title">OTP at Login</div>
+        <div class="gap-card-scope">Applied at: Account creation</div>
+      </div>
+      <div class="gap-card-body">
+        <div class="gap-card-row">
+          <div class="gap-card-row-label good">What it confirms</div>
+          <ul class="gap-bullets covers">
+            <li>The person logging in possesses this phone number right now</li>
+            <li>Every completed Pronto booking has a verified phone number on record</li>
+          </ul>
+        </div>
+        <div class="gap-card-row">
+          <div class="gap-card-row-label bad">What it does not confirm</div>
+          <ul class="gap-bullets gaps">
+            <li>The name the customer registers under</li>
+            <li>The address they declare</li>
+            <li>Who will actually receive the professional at the door</li>
+            <li>What the household environment looks like</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="gap-card gap-card-existing">
+      <div class="gap-card-header">
+        <div class="gap-card-status existing">Existing</div>
+        <div class="gap-card-title">Self-Declared Name at Registration</div>
+        <div class="gap-card-scope">Applied at: New user profile setup</div>
+      </div>
+      <div class="gap-card-body">
+        <div class="gap-card-row">
+          <div class="gap-card-row-label good">What it confirms</div>
+          <ul class="gap-bullets covers">
+            <li>A name is associated with the account for operational use</li>
+            <li>Gives the professional a name to use at door confirmation</li>
+          </ul>
+        </div>
+        <div class="gap-card-row">
+          <div class="gap-card-row-label bad">What it does not confirm</div>
+          <ul class="gap-bullets gaps">
+            <li>That the name is real; any string can be accepted without challenge</li>
+            <li>Any link between the name and the phone number owner</li>
+            <li>"Batman Singh" is a technically valid registration</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="gap-card gap-card-existing">
+      <div class="gap-card-header">
+        <div class="gap-card-status existing">Existing</div>
+        <div class="gap-card-title">Manual Location Entry</div>
+        <div class="gap-card-scope">Applied at: Registration and checkout</div>
+      </div>
+      <div class="gap-card-body">
+        <div class="gap-card-row">
+          <div class="gap-card-row-label good">What it confirms</div>
+          <ul class="gap-bullets covers">
+            <li>A declared service address is stored against the booking</li>
+            <li>The professional has a destination to travel to</li>
+          </ul>
+        </div>
+        <div class="gap-card-row">
+          <div class="gap-card-row-label bad">What it does not confirm</div>
+          <ul class="gap-bullets gaps">
+            <li>That the booker is physically present at or near the address</li>
+            <li>A Chennai-based user can initiate booking for an address in Pune</li>
+            <li>Does not flag legitimate remote bookings (e.g. son in Pune booking for mother in Mumbai)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="gap-card gap-card-existing">
+      <div class="gap-card-header">
+        <div class="gap-card-status existing">Existing</div>
+        <div class="gap-card-title">Receiver Name and Number at Checkout</div>
+        <div class="gap-card-scope">Applied at: Cart / checkout</div>
+      </div>
+      <div class="gap-card-body">
+        <div class="gap-card-row">
+          <div class="gap-card-row-label good">What it confirms</div>
+          <ul class="gap-bullets covers">
+            <li>Enables legitimate remote bookings e.g. child booking for elderly parent in another city</li>
+            <li>A contact name and number for the person at the address is on record</li>
+          </ul>
+        </div>
+        <div class="gap-card-row">
+          <div class="gap-card-row-label bad">What it does not confirm</div>
+          <ul class="gap-bullets gaps">
+            <li>Anything about the receiver's actual identity</li>
+            <li>Receiver fields are fully decoupled from the login identity</li>
+            <li>Any name and any phone number accepted</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="gap-card gap-card-gap">
+      <div class="gap-card-header">
+        <div class="gap-card-status gap">Not collected</div>
+        <div class="gap-card-title">Household Context</div>
+        <div class="gap-card-scope">Applied at: Currently nowhere in the flow</div>
+      </div>
+      <div class="gap-card-body">
+        <div class="gap-card-row">
+          <div class="gap-card-row-label good">What it would confirm</div>
+          <ul class="gap-bullets covers">
+            <li>Who will be present. Situational context the professional needs before stepping through a door</li>
+            <li>Whether the professional will be alone with a single male occupant</li>
+          </ul>
+        </div>
+        <div class="gap-card-row">
+          <div class="gap-card-row-label bad">Current state</div>
+          <ul class="gap-bullets gaps">
+            <li>No household context collected in the booking flow</li>
+            <li>Professionals compensate by calling customers in advance — on their own initiative</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="gap-card gap-card-gap">
+      <div class="gap-card-header">
+        <div class="gap-card-status gap">Unknown</div>
+        <div class="gap-card-title">Post-Service Ground Truth</div>
+        <div class="gap-card-scope">Applied at: Currently unknown</div>
+      </div>
+      <div class="gap-card-body">
+        <div class="gap-card-row">
+          <div class="gap-card-row-label good">What it would confirm</div>
+          <ul class="gap-bullets covers">
+            <li>Who was actually present vs. who the customer declared</li>
+            <li>Address accuracy across the booking base</li>
+            <li>Professional comfort level (most honest safety signal available)</li>
+          </ul>
+        </div>
+        <div class="gap-card-row">
+          <div class="gap-card-row-label bad">Current state</div>
+          <ul class="gap-bullets gaps">
+            <li>Unknown whether post-service data collected from professionals</li>
+            <li>Limited to no feedback loop into any risk or safety system</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="warn-strip">
+    <div class="warn-strip-label">Where we are starting from</div>
+    <div class="warn-strip-text">The architecture recommended is a <strong>risk reduction and traceability system</strong>, not a prevention system.<br> <br>While the larger goal is to enable prevention-grade customer safety architecture, the immediate aim is to solve for strong visibility and verification of the customer side.</div>
+  </div>
+
+
+</div>
+
+<!-- ======================== -->
+<!-- TAB 1: PHASED ARCH      -->
+<!-- ======================== -->
+<div class="section" id="tab-1">
+
+  <div class="section-header">
+    <div class="section-eyebrow">Implementable now · Zero ops overhead · No third-party dependencies</div>
+    <div class="section-title">4 low-tech interventions build the accountability infrastructure Pronto does not currently have.</div>
+    <div class="section-desc">Each intervention is self-contained, requires no new infrastructure, and generates no manual ops overhead.</div>
+  </div>
+
+  <div class="gate-flow">
+
+    <div class="gate-item">
+      <div class="gate-spine">
+        <div class="gate-node">1</div>
+        <div class="gate-line"></div>
+      </div>
+      <div class="gate-content">
+        <div class="gate-card">
+          <div class="gate-card-title">GPS Hard Registration Gate</div>
+          <div class="gate-card-timing">Registration · One-time · Zero ops overhead</div>
+          <div class="gate-card-body">Make GPS location confirmation non-bypassable at account creation.<br> <br>If the user denies location access, registration does not complete. The user must pin their location on a map before the account is created. The GPS-registered location becomes the first data point in the traceability footprint.<br><br><strong>Every registered account on Pronto has a real-world location on record. Anonymous bookings become traceable ones.</strong></div>
+          <div class="gate-detail-grid">
+            <div class="gate-detail">
+              <div class="gate-detail-label">Applies to</div>
+              <div class="gate-detail-value">Registration only. Repeat bookings at different addresses are legitimate and are not re-challenged.</div>
+            </div>
+            <div class="gate-detail">
+              <div class="gate-detail-label">Ops overhead</div>
+              <div class="gate-detail-value">Nil. Product workflow change only.</div>
+            </div>
+          </div>
+          <div class="gate-outcome">
+            <div class="outcome-pass"><div class="outcome-label">GPS granted</div>User pins location → registration completes → GPS-anchored record created</div>
+            <div class="outcome-fail"><div class="outcome-label">GPS denied</div>Registration blocked until location access is enabled</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gate-item">
+      <div class="gate-spine">
+        <div class="gate-node">2</div>
+        <div class="gate-line"></div>
+      </div>
+      <div class="gate-content">
+        <div class="gate-card">
+          <div class="gate-card-title">Safety Commitment Moment + Household Context Declaration</div>
+          <div class="gate-card-timing">First booking initiation + checkout · Net new to category</div>
+
+          <div class="commitment-box" style="margin-bottom:16px">
+            <div class="commitment-box-label">Displayed exactly when the customer intends to make the first booking</div>
+            <div class="commitment-box-text">"Help us make this a safe and positive experience for everyone."</div>
+            <div class="commitment-box-sub">Pronto professionals are verified, trained, and trusted. We ask our customers to meet them with the same respect.</div>
+          </div>
+
+          <div class="gate-card-body">This is not a T&Cs wall. It is a single full-screen moment, warm, human, brief, that signals to the customer that the professional's safety is a value Pronto holds actively.<br> <br><strong>It creates psychological accountability at the exact moment the professional's safety becomes real.</strong><br> <br>It frames what immediately follows, the two household context questions, as care rather than interrogation/ friction.</div>
+
+          <div style="background:var(--panel-alt);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:10px">
+            <div style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Question 1 — Booking intent · Single select · Mandatory</div>
+            <div style="font-size:14px;font-weight:600;color:var(--ink);margin-bottom:10px">"Who are you booking for?"</div>
+            <div style="display:flex;flex-wrap:wrap;gap:7px">
+              <span style="background:var(--green-wash);color:var(--green-dark);border:1px solid var(--border-green);border-radius:5px;padding:5px 10px;font-size:13px">🏠 Myself — I will be present</span>
+              <span style="background:var(--warn-bg);color:#92400E;border:1px solid rgba(217,119,6,0.25);border-radius:5px;padding:5px 10px;font-size:13px">📍 Someone else — I am booking remotely</span>
+            </div>
+            <div style="font-size:12px;color:var(--muted);margin-top:8px">If "Someone else" is selected: receiver name, receiver contact number, and full service address are captured as a linked accountability record. Currently these may exist as three disconnected fields in the app with no linkage to the booker's verified identity.</div>
+          </div>
+
+          <div style="background:var(--panel-alt);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:14px">
+            <div style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Question 2 — Household context · Single select · Mandatory</div>
+            <div style="font-size:14px;font-weight:600;color:var(--ink);margin-bottom:10px">"Who will be home during the appointment?"</div>
+            <div style="display:flex;flex-wrap:wrap;gap:7px">
+              <span style="background:var(--green-wash);color:var(--green-dark);border:1px solid var(--border-green);border-radius:5px;padding:5px 10px;font-size:13px">👩 Only I will be present</span>
+              <span style="background:var(--panel-bg);color:var(--ink-2);border:1px solid var(--border);border-radius:5px;padding:5px 10px;font-size:13px">👩 Female resident only</span>
+              <span style="background:var(--panel-bg);color:var(--ink-2);border:1px solid var(--border);border-radius:5px;padding:5px 10px;font-size:13px">👨 Male resident only</span>
+              <span style="background:var(--panel-bg);color:var(--ink-2);border:1px solid var(--border);border-radius:5px;padding:5px 10px;font-size:13px">🧓 Elderly female resident</span>
+              <span style="background:var(--panel-bg);color:var(--ink-2);border:1px solid var(--border);border-radius:5px;padding:5px 10px;font-size:13px">🧓 Elderly male resident</span>
+              <span style="background:var(--panel-bg);color:var(--ink-2);border:1px solid var(--border);border-radius:5px;padding:5px 10px;font-size:13px">👫 Mixed household — female and male members</span>
+              <span style="background:var(--warn-bg);color:#92400E;border:1px solid rgba(217,119,6,0.25);border-radius:5px;padding:5px 10px;font-size:13px">👨‍👨 Multiple members — all male</span>
+            </div>
+            <div style="font-size:12px;color:var(--muted);margin-top:8px">The "Only I will be present" option is shown only when Q1 = Myself. "Multiple members — all male" surfaces the one household composition that is most safety-relevant to a lone woman professional, without the platform making a blocking decision on that basis.</div>
+          </div>
+
+          <div class="gate-detail-grid">
+            <div class="gate-detail">
+              <div class="gate-detail-label">What this does</div>
+              <div class="gate-detail-value">Removes the burden from the professional to independently assess the household situation before entering. The platform now carries that information systematically.<br> <br>For remote bookings, creates a named accountability record linking receiver identity, contact number, and service address as a single declared unit.</div>
+            </div>
+            <div class="gate-detail">
+              <div class="gate-detail-label">What this does not do</div>
+              <div class="gate-detail-value">It does not verify the declaration. A bad actor can lie. It is limited as a declared intent record and a data instrument, not a prevention mechanism.<br> <br>A false declaration does not prevent an incident, but it creates a documented accountability footprint that did not previously exist.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gate-item">
+      <div class="gate-spine">
+        <div class="gate-node">3</div>
+        <div class="gate-line"></div>
+      </div>
+      <div class="gate-content">
+        <div class="gate-card">
+          <div class="gate-card-title">Professional Pre-Arrival Briefing + Door Confirmation</div>
+          <div class="gate-card-timing">Pronto Professional app · At dispatch and at arrival · Net new to category</div>
+          <div class="gate-card-body">Before the professional begins travel, her app shows a structured briefing: the receiver name and contact, whether this is a self-booking or a remote booking, and the full household context declaration.<br><br>Critically, the briefing includes a <strong>soft pre-acceptance step</strong>. The professional sees the household context before the booking is confirmed to her. She can accept or flag for reassignment. No explanation required, no formal complaint process, no penalty. The platform does not make the safety call. The professional does.<br><br>At arrival, before the countdown timer starts, the professional confirms presence at the door. The timer is a <strong>product-enforced lock</strong>. It cannot start until she actively confirms. No hub manager can override this.</div>
+
+          <div class="between-flow" style="margin-top:12px">
+            <div class="bflow-step" style="border-color:var(--border-green);background:var(--green-wash)">
+              <div class="bflow-num" style="background:var(--green);color:white;border-color:var(--green)">✓</div>
+              <div class="bflow-text"><strong>CASE A: Receiver confirmed present</strong> → professional initiates timer. Service begins. No further action required.</div>
+            </div>
+            <div class="bflow-step" style="border-color:rgba(217,119,6,0.3);background:var(--warn-bg)">
+              <div class="bflow-num" style="background:var(--warn);color:white;border-color:var(--warn)">⚠</div>
+              <div class="bflow-text"><strong>CASE B: Different person present</strong> → timer lock activates. Booking cannot proceed to active service. Hub manager is notified automatically and contacts the customer to verify receiver identity. Professional receives an in-app prompt: <em>"You are not required to enter. You will be paid in full if you choose to leave."</em> The professional decides to enter or leave. <strong>The hub manager cannot coerce her to enter. Her decision is final.</strong></div>
+            </div>
+            <div class="bflow-step" style="border-color:rgba(220,38,38,0.2);background:var(--danger-bg)">
+              <div class="bflow-num" style="background:var(--danger);color:white;border-color:var(--danger)">✗</div>
+              <div class="bflow-text"><strong>CASE C: No one present</strong> → timer lock activates. Professional does not enter. Hub manager notified. Full pay protection applies automatically. Booking is flagged for risk scoring.</div>
+            </div>
+          </div>
+
+          <div style="background:var(--warn-bg);border:1px solid rgba(217,119,6,0.25);border-left:3px solid var(--warn);border-radius:7px;padding:12px 14px;margin-top:12px">
+            <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--warn);margin-bottom:5px">Policy design note — pre-acceptance</div>
+            <div style="font-size:13.5px;color:var(--ink-2);line-height:1.55">When household context indicates elevated situational risk, specifically "Multiple members — all male", the briefing surfaces this prominently before the professional confirms travel. If she flags for reassignment, the booking returns to the hub manager. If no professional accepts, the hub manager communicates limited availability to the customer without disclosing the reason. Pronto does not refuse the customer. The professional exercises her right to decline without penalty or explanation.</div>
+          </div>
+
+          <div style="background:var(--danger-bg);border:1px solid rgba(220,38,38,0.2);border-left:3px solid var(--danger);border-radius:7px;padding:12px 14px;margin-top:10px">
+            <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--danger);margin-bottom:5px">Policy design note — pay protection</div>
+            <div style="font-size:13.5px;color:var(--ink-2);line-height:1.55">A professional who declines entry at the door, whether due to a receiver mismatch, household context concern, or any other safety assessment, is paid in full for the booking with no deduction, no rating impact, and no explanation required. This is not discretionary. It is a product-enforced policy. <strong>The economic lever that makes hub manager pressure effective must be removed by design, not by training.</strong></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gate-item">
+      <div class="gate-spine">
+        <div class="gate-node">4</div>
+      </div>
+      <div class="gate-content">
+        <div class="gate-card">
+          <div class="gate-card-title">Post-Service Professional Self-Report</div>
+          <div class="gate-card-timing">Pronto Professional app · Post-service · Core Foundation for Customer Assessment</div>
+          <div class="gate-card-body">After the timer stops, professional completes a structured log in under 60 seconds within 15 minutes of the completed booking. Framed as a routine service record, not a complaint mechanism.</div>
+          <div class="step-row" style="margin-top:8px">
+            <div class="step-card">
+              <div class="step-card-eyebrow">Field 1</div>
+              <div class="step-card-title">Address confirmation</div>
+              <div class="step-card-body">Pre-filled from booking. Professional confirms or corrects. Validates address accuracy across the booking base.</div>
+            </div>
+            <div class="step-card">
+              <div class="step-card-eyebrow">Field 2</div>
+              <div class="step-card-title">Household composition observed</div>
+              <div class="step-card-body">Who was actually home during the appointment. This is the ground-truth record.</div>
+            </div>
+            <div class="step-card">
+              <div class="step-card-eyebrow">Field 3</div>
+              <div class="step-card-title">Household size estimate</div>
+              <div class="step-card-body">1 / 2 / 3–4 / 5+ people. Builds demographic data on Pronto's actual customer household base over time.</div>
+            </div>
+            <div class="step-card">
+              <div class="step-card-eyebrow">Fields 4–5 (Internal only)</div>
+              <div class="step-card-title">Environment note + Comfort rating</div>
+              <div class="step-card-body">Additional notes on customer home environement and comfort rating on a scale of 1 to 5, never shown to customer.</div>
+            </div>
+          </div>
+          <div class="insight-strip" style="margin-top:12px;margin-bottom:0">
+            <div class="insight-strip-label">Why this data matters</div>
+            <div class="insight-strip-text">Cross-referencing the customer's household context declaration against the professional's post-service observation creates a <strong>ground-truth accuracy signal</strong>.<br> <br>Consistent mismatches between declaration and observation, across multiple bookings at the same account, become the most reliable risk signal in the entire architecture, because it is based on actual observed reality, not probabilistic inference.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="insight-strip" style="margin-top:8px">
+    <div class="insight-strip-label">What these four interventions make possible</div>
+    <div class="insight-strip-text">Every booking completed under this architecture generates two things Pronto does not currently have: <strong>a declared household record from the customer</strong> before the service, and <strong>a ground-truth observation from the professional</strong> after it. <br> <br>Over time, that data creates a customer behaviour history that informs how subsequent bookings from the same account may be scored and handled.</div>
+  </div>
+
+</div>
+
+<!-- ====================== -->
+<!-- TAB 2: JOURNEY TIMELINE -->
+<!-- ====================== -->
+<div class="section" id="tab-2">
+
+  <div class="section-header">
+    <div class="section-eyebrow">Live app walkthrough</div>
+    <div class="section-title">The current customer journey vs what it should look like.</div>
+    <div class="section-desc">Read top to bottom. Unchanged steps are shown quietly. Steps with a structural gap are highlighted in red.<br> <br>Steps where an intervention is introduced show the current state alongside the recommended change, at the exact moment in the journey where it occurs.</div>
+  </div>
+
+<div class="journey-timeline">
+
+    <!-- STEP 1 — quiet -->
+    <div class="journey-step">
+      <div class="journey-spine">
+        <div class="journey-node quiet">1</div>
+        <div class="journey-thread quiet"></div>
+      </div>
+      <div class="journey-body">
+        <div class="journey-quiet">App opens. Notification permission. Fully skippable. No consequence to booking flow.</div>
+      </div>
+    </div>
+
+    <!-- STEP 2 — quiet: OTP login -->
+    <div class="journey-step">
+      <div class="journey-spine">
+        <div class="journey-node quiet">2</div>
+        <div class="journey-thread intervention"></div>
+      </div>
+      <div class="journey-body">
+        <div class="journey-quiet">OTP login. Verifies phone number possession. Creates a verified identity anchor for the account.</div>
+      </div>
+    </div>
+
+    <!-- STEP 3 — intervention: GPS hard gate -->
+    <div class="journey-step">
+      <div class="journey-spine">
+        <div class="journey-node intervention">3</div>
+        <div class="journey-thread intervention"></div>
+      </div>
+      <div class="journey-body">
+        <div class="journey-intervention-row">
+          <div class="journey-before">
+            <div class="journey-col-label red">Current — gap</div>
+            <div class="journey-col-title">Location is allowed to be self-declared, never verified</div>
+            <div class="journey-col-body red-text">GPS is optional. Manual entry not challenged.<br> <br>A user in Chennai can declare Pune and proceed to booking without any system challenge. The OTP-verified phone number and the declared address are structurally decoupled.</div>
+          </div>
+          <div class="journey-after">
+            <div class="journey-col-label green">Recommended</div>
+            <div class="journey-col-title">GPS — hard registration gate</div>
+            <div class="journey-col-body">Location access denied → registration blocked. User enables location, pins their position on a map, and only then does registration complete.<br> <br>Every account on Pronto has a verified real-world location on record from the moment it is created. Anonymous bookings become traceable ones.</div>
+            <div><span class="intervention-tag">Intervention 1</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 4 — gap: name unverified -->
+    <div class="journey-step">
+      <div class="journey-spine">
+        <div class="journey-node gap">4</div>
+        <div class="journey-thread gap"></div>
+      </div>
+      <div class="journey-body">
+        <div class="journey-gap-row">
+          <div class="journey-gap-label">Current — acknowledged gap · No immediate fix recommended</div>
+          <div class="journey-gap-text">After confirming location, the customer is asked for their name. First name mandatory, <strong>any string accepted.</strong><br> <br>The declared name is entirely unverified. Adding a verification layer here would introduce friction at the most sensitive point in the onboarding funnel and risk abandonment before the first booking is placed. This gap is documented but not addressed at this stage.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 5 — intervention: Safety Commitment + Household Context -->
+    <div class="journey-step">
+      <div class="journey-spine">
+        <div class="journey-node intervention">5</div>
+        <div class="journey-thread intervention"></div>
+      </div>
+      <div class="journey-body">
+        <div class="journey-intervention-row">
+          <div class="journey-before">
+            <div class="journey-col-label red">Current — gap</div>
+            <div class="journey-col-title">No safety commitment. No household context collected at any point.</div>
+            <div class="journey-col-body red-text">Customer proceeds directly from registration to browsing. No accountability moment exists. No household context is ever asked.</div>
+          </div>
+          <div class="journey-after">
+            <div class="journey-col-label green">Recommended</div>
+            <div class="journey-col-title">Safety Commitment Moment + 2 Question Household Context Declaration</div>
+            <div class="journey-col-body">Before the first booking, a single full-screen moment: <em>"Help us make this a safe and positive experience for everyone."</em> Followed by two sequential questions.<br> <br>Q1: who are you booking for? (myself / someone else);<br> Q2: who will be home during the appointment? (seven single-select options including "Multiple members — all male").<br> <br>The platform now carries situational context the professional previously had to seek on her own.</div>
+            <div><span class="intervention-tag">Intervention 2</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 6 — intervention: receiver decoupled → linked accountability record -->
+    <div class="journey-step">
+      <div class="journey-spine">
+        <div class="journey-node intervention">6</div>
+        <div class="journey-thread intervention"></div>
+      </div>
+      <div class="journey-body">
+        <div class="journey-intervention-row">
+          <div class="journey-before">
+            <div class="journey-col-label red">Current — critical gap</div>
+            <div class="journey-col-title">Receiver identity fully decoupled from the booker</div>
+            <div class="journey-col-body red-text">At checkout, receiver name and phone number are entered as free-form fields with zero verification. They are entirely decoupled from the login identity.<br> <br>The professional is dispatched to meet a person whose identity has never been verified at any level. This is the most significant structural gap in the current customer-side architecture.</div>
+          </div>
+          <div class="journey-after">
+            <div class="journey-col-label green">Recommended</div>
+            <div class="journey-col-title">Receiver identity linked to the booker's accountability record</div>
+            <div class="journey-col-body">Receiver name, contact number, and service address are captured as a linked accountability record tied to the booker's verified identity — not three disconnected free-form fields.<br> <br>For remote bookings, this creates a declared, traceable chain from the verified booker to the person at the door.<br> <br>A false declaration does not prevent an incident, but it creates a documented accountability footprint that did not previously exist.</div>
+            <div><span class="intervention-tag">Intervention 2 cont.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 7 — intervention: Pre-arrival briefing + door confirmation -->
+    <div class="journey-step">
+      <div class="journey-spine">
+        <div class="journey-node intervention">7</div>
+        <div class="journey-thread intervention"></div>
+      </div>
+      <div class="journey-body">
+        <div class="journey-intervention-row">
+          <div class="journey-before">
+            <div class="journey-col-label red">Current — two compounding gaps</div>
+            <div class="journey-col-title">Professional dispatched blind. </div>
+            <div class="journey-col-body red-text">Booking is confirmed. Professional dispatched with address and receiver name only. No household context, no booking type flag. She calls ahead on her own initiative.<br> <br> At arrival, the timer starts when the professional initiates it.<br> <br> No confirmation of who is at the door, limited product-level protection if the person present is not the declared receiver.</div>
+          </div>
+          <div class="journey-after">
+            <div class="journey-col-label green">Recommended</div>
+            <div class="journey-col-title">Pre-arrival briefing + door confirmation with product-enforced timer lock</div>
+            <div class="journey-col-body">Before travel, professional receives full briefing: receiver name, booking type (self or remote), household context declaration.<br> <br>At the door, timer is product-locked until she confirms receiver presence.<br> <br>If a different person is at the door, timer lock activates, hub manager notified, professional receives an in-app prompt confirming she will be paid in full if she chooses to leave. The hub manager cannot instruct her to enter. Her decision is final.</div>
+            <div><span class="intervention-tag">Intervention 3</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 8 — quiet: service in progress -->
+    <div class="journey-step">
+      <div class="journey-spine">
+        <div class="journey-node quiet">8</div>
+        <div class="journey-thread quiet"></div>
+      </div>
+      <div class="journey-body">
+        <div class="journey-quiet">Service in progress. Timer running. SOS button available. Hub manager reachable on call.</div>
+      </div>
+    </div>
+
+    <!-- STEP 9 — intervention: Post-service self-report -->
+    <div class="journey-step">
+      <div class="journey-spine">
+        <div class="journey-node intervention">9</div>
+        <div class="journey-thread quiet"></div>
+      </div>
+      <div class="journey-body">
+        <div class="journey-intervention-row">
+          <div class="journey-before">
+            <div class="journey-col-label red">Current — gap</div>
+            <div class="journey-col-title">No post-service data collected. No feedback loop.</div>
+            <div class="journey-col-body red-text">Timer stops. Booking closes.<br> <br>Unknown whether feedback is collected from the professional about the household she just served. Unknown whether there is cross-referencing of what the customer declared against what was actually present.</div>
+          </div>
+          <div class="journey-after">
+            <div class="journey-col-label green">Recommended</div>
+            <div class="journey-col-title">Post-service professional self-report</div>
+            <div class="journey-col-body">Within 15 minutes of the completed booking, professional logs address confirmation, household composition observed, household size estimate, optional environment note, comfort rating 1–5 (internal, never shown to customer).<br> <br>Creates the ground-truth record that makes every subsequent booking from the same account more informed than the last.</div>
+            <div><span class="intervention-tag">Intervention 4</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="warn-strip">
+    <div class="warn-strip-label">The most significant gap</div>
+    <div class="warn-strip-text">The receiver field at checkout accepts any name, any number, entirely unverified and decoupled from the booking identity. The professional walks through a door not knowing who is on the other side.<strong><br> <br>This is the most significant structural gap in Pronto's current customer-side safety architecture.</strong></div>
+  </div>
+
+  <div class="insight-strip">
+    <div class="insight-strip-label">The legitimate use case the receiver field serves</div>
+    <div class="insight-strip-text">Working professionals booking Pronto for elderly parents in different addresses or  cities. Caregivers arranging services for dependents.<br> <br><strong>The recommended flow preserves this use case while creating a named accountability record for every remote booking.</strong></div>
+  </div>
+
+</div>
+
+<!-- ======================== -->
+<!-- TAB 3: SCORING + RESPONSE -->
+<!-- ======================== -->
+<div class="section" id="tab-3">
+
+  <div class="section-header">
+    <div class="section-eyebrow">Internal to Pronto only</div>
+    <div class="section-title">No professional enters a home cold. The platform has already mapped what she needs to know.</div>
+    <div class="section-desc">Every new and completed booking adds to what Pronto knows about a customer.<br> <br>That accumulated history, including household declarations made, observations recorded by professionals, comfort signals logged, determines how every subsequent booking from that account is handled.<br> <br>There are three possible account states.</div>
+  </div>
+
+  <div class="trust-tier-grid">
+    <div class="trust-card">
+      <div class="trust-badge green">Trusted Account</div>
+      <div class="trust-signals">
+        <div class="trust-signal-item">GPS-registered location matches booking address</div>
+        <div class="trust-signal-item">Household context declaration consistent with professional observations across multiple bookings</div>
+        <div class="trust-signal-item">Door confirmation: receiver match rate high</div>
+        <div class="trust-signal-item">Comfort ratings provided by professional consistently at threshold or above</div>
+        <div class="trust-signal-item">Repeat customer with established booking history</div>
+      </div>
+      <div class="trust-action green">Professional sees "Trusted account" flag in her pre-arrival briefing before travel begins.<br> <br>Standard dispatch.</div>
+    </div>
+    <div class="trust-card">
+      <div class="trust-badge amber">New Account</div>
+      <div class="trust-signals">
+        <div class="trust-signal-item">First or second booking, no customer history yet</div>
+        <div class="trust-signal-item">Household declaration completed but no/ limited observation data to cross-reference</div>
+        <div class="trust-signal-item">No prior door confirmation outcomes on record</div>
+      </div>
+      <div class="trust-action amber">Professional sees no flag. Absence of a badge is not a warning, it is the absence of history.<br> <br>Standard dispatch.</div>
+    </div>
+    <div class="trust-card">
+      <div class="trust-badge red">Account Under Review</div>
+      <div class="trust-signals">
+        <div class="trust-signal-item">Accumulated threshold of low comfort ratings from multiple professionals</div>
+        <div class="trust-signal-item">Repeated declaration vs. observation mismatches confirmed by post-service reports</div>
+        <div class="trust-signal-item">Door confirmation: repeated receiver mismatches or no-shows on record</div>
+      </div>
+      <div class="trust-action red">Account placed on hold. No new bookings confirmed until hub manager review is complete.<br> <br>Customer receives a neutral message, no score, no accusation, no explanation beyond that the team will be in touch.</div>
+    </div>
+  </div>
+
+  <div class="insight-strip" style="margin-bottom:20px">
+    <div class="insight-strip-label">Design principle</div>
+    <div class="insight-strip-text">The professional is never shown a risk score or a negative label about a customer. What she is shown in her pre-arrival briefing is facts: the household context declaration, the booking type, the receiver identity, and whether this is a new or returning account.<br> <br>A <strong>"Trusted account"</strong> badge appears only where a positive history has been established; its absence is not a warning, it is simply the absence of history. The professional reads the situation from what the platform knows and exercises her own judgement. Pronto never says "dangerous." It ensures she is never uninformed.</div>
+  </div>
+
+  <div class="misconduct-section" style="margin-bottom:20px">
+    <div class="collapsible-header" onclick="toggleCollapsible(this)">
+      <div class="collapsible-header-left">
+        <div class="misconduct-title">Misconduct escalation tiers</div>
+        <div class="misconduct-sub">What happens when something goes wrong. Read left to right: trigger → action → outcome</div>
+      </div>
+      <div class="collapsible-chevron">▼</div>
+    </div>
+    <div class="collapsible-body">
+      <div class="misconduct-row">
+        <div class="misconduct-trigger">
+          <div class="trigger-label warn">Tier 1</div>
+          <div class="trigger-desc"><strong>Professional flags discomfort in self-report.</strong><br> <br>Comfort rating below threshold. Single instance.</div>
+        </div>
+        <div class="misconduct-action">
+          <div class="action-title">Flagged internally. No action against customer.</div>
+          <div class="action-detail">
+	   <ul>
+	   <li>Account history updated.</li>
+	   <li>Hub manager notified.</li>
+	   <li>Next booking from this account reviewed by hub manager before dispatch.</li> 
+	   <li>Account continues to operate normally.</li>
+	   </ul>
+	</div>
+        </div>
+        <div class="misconduct-result">
+          <div class="action-title">Customer account is monitored.</div>
+          <div class="action-detail">
+	  <ul>
+	  <li>Customer experiences no change.</li> 
+	  <li>Future bookings from this account carry the flag internally.</li> 
+	  <li>Accumulation of Tier 1 flags triggers the post-threshold protocol detailed below.</li>
+	  </ul>
+         </div>
+        </div>
+      </div>
+      <div class="misconduct-row">
+        <div class="misconduct-trigger">
+          <div class="trigger-label danger">Tier 2</div>
+          <div class="trigger-desc"><strong>SOS triggered in-booking.</strong><br> <br>Or <br> <br><strong>Repeated Tier 1 flags from multiple professionals</strong> (exceeding the defined threshold.)</div>
+        </div>
+        <div class="misconduct-action">
+          <div class="action-title">Immediate account suspension.</div>
+          <div class="action-detail">
+	  <ul>
+          <li>Booking halted.</li> 
+	  <li>Hub manager dispatched.</li> 
+          <li>Safety Responder protocol activated.</li> 
+	  <li>Police contact initiated if SOS triggered.</li>
+	  </ul>
+         </div>
+        </div>
+        <div class="misconduct-result">
+          <div class="action-title">Platform access suspended pending review.</div>
+          <div class="action-detail">
+	  <ul>
+	  <li>Account placed on hold.</li> 
+	  <li>No new bookings.</li> 
+	  <li>Traceability footprint: phone, GPS record, payment method, declaration history preserved for police review.</li>
+	  </ul>
+	  </div>
+        </div>
+      </div>
+      <div class="misconduct-row">
+        <div class="misconduct-trigger">
+          <div class="trigger-label severe">Tier 3</div>
+          <div class="trigger-desc"><strong>Confirmed misconduct, assault, or Harassment.</strong></div>
+        </div>
+        <div class="misconduct-action">
+          <div class="action-title">Permanent ban. 3-layer block.</div>
+          <div class="action-detail">
+          <ul>
+	  <li>Phone number blacklisted.</li> 
+	  <li>Device fingerprint blocked.</li> 
+	  <li>Payment method flagged.</li>
+	  <li>No appeal process.</li>
+	  </ul>
+          </div>
+        </div>
+        <div class="misconduct-result">
+          <div class="action-title">Full traceability footprint for police review</div>
+          <div class="action-detail"><ul><li>GPS registration record, household declaration history, professional self-report log, door confirmation timestamps available for police review and  action.</li></ul></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="misconduct-section" style="margin-bottom:20px">
+    <div class="collapsible-header" onclick="toggleCollapsible(this)">
+      <div class="collapsible-header-left">
+        <div class="misconduct-title">Post-threshold protocol: what happens when accumulated signals breach the defined limit</div>
+        <div class="misconduct-sub">Triggered by accumulation of Tier 1 flags, not by a single incident. Three sequential steps.</div>
+      </div>
+      <div class="collapsible-chevron">▼</div>
+    </div>
+    <div class="collapsible-body">
+      <div class="misconduct-row">
+        <div class="misconduct-trigger">
+          <div class="trigger-label warn">Step 1</div>
+          <div class="trigger-desc"><strong>Defined threshold of accumulated Tier 1 signals breached.</strong></div>
+        </div>
+        <div class="misconduct-action">
+          <div class="action-title">Automatic account hold</div>
+          <div class="action-detail">
+	  <ul>
+	  <li>No new bookings can be confirmed.</li> 
+	  <li>Customer receives a neutral message: "We are currently unable to confirm new bookings for your account. Our team will be in touch shortly."</li> 
+	  <li>No accusation. No score disclosed. No explanation.</li>
+	  </ul>
+	  </div>
+        </div>
+        <div class="misconduct-result">
+          <div class="action-title">Hub manager review initiated</div>
+          <div class="action-detail"><ul><li>Hub manager receives full account history: declaration accuracy, comfort ratings, door confirmation outcomes, booking pattern, before making any decision.</li></ul></div>
+        </div>
+      </div>
+      <div class="misconduct-row">
+        <div class="misconduct-trigger">
+          <div class="trigger-label warn">Step 2</div>
+          <div class="trigger-desc"><strong>Hub manager review.</strong></div>
+        </div>
+        <div class="misconduct-action">
+          <div class="action-title">Hub manager phone outreach to customer</div>
+          <div class="action-detail">
+	  <ul>
+	  <li>A brief direct conversation, not an interrogation.</li> 
+	  <li>Purpose is to give the customer an opportunity to provide context.</li>
+	  <li>An elderly resident who cannot communicate clearly, a genuinely chaotic but safe household, a professional who may have had a personal issue, these surface in a conversation.</li> 
+	  <li>Hub manager exercises judgement.</li>
+	  </ul>
+          </div>
+        </div>
+        <div class="misconduct-result">
+          <div class="action-title">Three possible outcomes</div>
+          <div class="action-detail">See Step 3 below.</div>
+        </div>
+      </div>
+      <div class="misconduct-row">
+        <div class="misconduct-trigger">
+          <div class="trigger-label warn">Step 3</div>
+          <div class="trigger-desc"><strong>Hub manager decision following review.</strong></div>
+        </div>
+        <div class="misconduct-action">
+          <div class="action-title">Outcome A: reinstated with internal flag</div>
+          <div class="action-detail">
+	  <ul>
+	  <li>No genuine safety concern found. Account restored.</li> 
+          <li>Carries an internal flag: future bookings from this account are routed to experienced professionals only, with the full account history, prior comfort ratings, declaration accuracy, review outcome, in the pre-arrival briefing.</li> 
+          </ul>
+	  </div>
+        </div>
+        <div class="misconduct-result">
+          <div class="action-title">Outcome B: Permanent suspension & Outcome C: Police escalation</div>
+          <div class="action-detail"><strong>Outcome B:</strong><br> 
+	  <ul>
+	  <li>Consistent and credible pattern confirmed. Account suspended.</li>
+	  <li>Customer told account has been closed. No reason given beyond that Pronto reserves the right to suspend access.</li> 
+	  <li>No legal admission, no accusation.</li></ul><br><br><strong>Outcome C:</strong><ul><li>Any single booking that witnessed a formal safety incident bypasses this protocol entirely. Goes directly to Tier 2 / Tier 3 of the misconduct response detailed above.</li></ul></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ops-card" style="margin-bottom:20px">
+    <div class="collapsible-header ops-card-header" onclick="toggleCollapsible(this)">
+      <div class="collapsible-header-left">
+        <div class="ops-card-eyebrow">Incident response</div>
+        <div class="ops-card-title">In-booking SOS protocol: what happens minute by minute</div>
+      </div>
+      <div class="collapsible-chevron">▼</div>
+    </div>
+    <div class="collapsible-body">
+      <div class="ops-card-body">
+        <div class="protocol-timeline">
+          <div class="protocol-step">
+            <div class="protocol-time">T+0</div>
+            <div class="protocol-action"><strong>Professional triggers SOS</strong> → Hub manager receives immediate alert with professional's last confirmed location (door confirmation GPS), customer account details, household context declaration, and receiver identity on record.</div>
+          </div>
+          <div class="protocol-step">
+            <div class="protocol-time">T+2 min</div>
+            <div class="protocol-action"><strong>Hub manager calls professional</strong> → If answered: assesses situation, instructs exit or shelter. If unanswered: escalate immediately.</div>
+          </div>
+          <div class="protocol-step">
+            <div class="protocol-time">T+5 min</div>
+            <div class="protocol-action"><strong>Hub manager begins physical movement</strong> toward address (1.5–2km polygon). Police call initiated simultaneously.</div>
+          </div>
+          <div class="protocol-step">
+            <div class="protocol-time">T+10 min</div>
+            <div class="protocol-action"><strong>Customer account suspended</strong> → Traceability footprint: phone, GPS registration record, household declaration, payment method, flagged for police review. Declaration vs. observation history retrieved.</div>
+          </div>
+          <div class="protocol-step">
+            <div class="protocol-time">T+15 to 20 min</div>
+            <div class="protocol-action"><strong>Hub manager arrives</strong> → Police briefed with full customer footprint. Formalising this SLA and closing the 15–20 minute physical response gap is the single most important operational complement to this architecture.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="insight-strip">
+    <div class="insight-strip-label">The safety proposition for professionals</div>
+    <div class="insight-strip-text">1. Every customer has a verified location on record, a declared household context before they arrive, and a ground-truth log created after they complete a booking.<br>2. Patterns of concern trigger a human review, not an algorithm.<br>3. Confirmed misconduct by customers results in them being permanently banned.<br> <br><strong>This is the infrastructure that makes Pronto the platform professionals choose, and stay on.</strong></div>
+  </div>
+
+</div>
+
+</div><!-- /main -->
+
+<script>
+  function showTab(index) {
+    document.querySelectorAll('.section').forEach((s, i) => {
+      s.classList.toggle('active', i === index);
+    });
+    document.querySelectorAll('.nav-tab').forEach((t, i) => {
+      t.classList.toggle('active', i === index);
+    });
+  }
+
+  function toggleCollapsible(header) {
+    const body = header.nextElementSibling;
+    const chevron = header.querySelector('.collapsible-chevron');
+    const isOpen = body.classList.contains('open');
+    body.classList.toggle('open', !isOpen);
+    chevron.classList.toggle('open', !isOpen);
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,1724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Micromarket Ops Scorecard · Built by Archit Kannan</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --green: #04B565;
+  --green-dark: #038A4D;
+  --green-mid: #05D677;
+  --page-bg: #F2F5F9;
+  --panel-bg: #FFFFFF;
+  --panel-alt: #F8FAFB;
+  --header-bg: #0F2318;
+  --ink: #1A2E23;
+  --ink-2: #374B3E;
+  --muted: #6B8070;
+  --muted-light: #9DB5A5;
+  --green-wash: #EAF7F2;
+  --warn: #D97706;
+  --warn-bg: #FFFBEB;
+  --danger: #DC2626;
+  --danger-bg: #FEF2F2;
+  --border: #E2E8E4;
+  --border-green: rgba(4,181,101,0.2);
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  --purple: #7C3AED;
+  --purple-bg: #F5F3FF;
+  --purple-border: rgba(124,58,237,0.2);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: var(--page-bg);
+  color: var(--ink);
+  min-height: 100vh;
+}
+
+/* HEADER */
+.header {
+  background: var(--header-bg);
+  border-bottom: 3px solid var(--green);
+  padding: 24px 40px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.appendix-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  color: var(--green);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.header h1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.02em;
+}
+
+.header-subtitle {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: rgba(255,255,255,0.55);
+  line-height: 1.65;
+  max-width: 640px;
+  margin-top: 12px;
+  letter-spacing: 0;
+}
+
+.header-meta {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: rgba(255,255,255,0.45);
+  text-align: right;
+  line-height: 1.7;
+}
+
+.header-meta span { color: var(--green); }
+
+/* INSTRUMENT NOTE */
+.instrument-note {
+  background: var(--panel-bg);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.note-text {
+  font-size: 13.5px;
+  color: var(--muted);
+  line-height: 1.5;
+  max-width: 780px;
+}
+
+.note-text strong { color: var(--ink-2); font-weight: 600; }
+
+.glossary-btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: none;
+  border: 1px solid var(--border-green);
+  color: var(--green-dark);
+  padding: 6px 14px;
+  border-radius: 5px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.glossary-btn:hover { background: var(--green-wash); }
+
+/* GLOSSARY PANEL */
+.glossary-panel {
+  display: none;
+  background: var(--green-wash);
+  border-bottom: 2px solid var(--border-green);
+  padding: 24px 40px;
+}
+
+.glossary-panel.open { display: block; }
+
+.glossary-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--green-dark);
+  margin-bottom: 16px;
+}
+
+.glossary-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+
+.glossary-card {
+  background: var(--panel-bg);
+  border: 1px solid var(--border-green);
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+
+.glossary-card-term {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--green-dark);
+  margin-bottom: 6px;
+}
+
+.glossary-card-formula {
+  font-family: 'DM Mono', monospace;
+  font-size: 11.5px;
+  color: var(--green-dark);
+  background: var(--green-wash);
+  border: 1px solid var(--border-green);
+  border-radius: 3px;
+  padding: 3px 7px;
+  margin-bottom: 8px;
+  display: inline-block;
+}
+
+.glossary-card-def {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.glossary-card-why {
+  font-size: 12.5px;
+  color: var(--ink-2);
+  line-height: 1.5;
+  margin-top: 7px;
+  padding-top: 7px;
+  border-top: 1px solid var(--border-green);
+}
+
+/* MAIN LAYOUT */
+.main {
+  padding: 24px 40px 48px;
+}
+
+/* SYSTEM SUMMARY */
+.system-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.summary-card {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 18px;
+  box-shadow: var(--shadow);
+}
+
+.summary-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.summary-value {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin-bottom: 4px;
+}
+
+.summary-value.red { color: var(--danger); }
+.summary-value.amber { color: var(--warn); }
+.summary-value.green { color: var(--green-dark); }
+
+.summary-sub {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+/* ALERT STRIP */
+.alert-strip {
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  font-size: 14.5px;
+  line-height: 1.5;
+  display: none;
+}
+
+.alert-strip.red {
+  background: var(--danger-bg);
+  border: 1px solid rgba(220,38,38,0.25);
+  border-left: 4px solid var(--danger);
+  color: #991B1B;
+  display: block;
+}
+
+.alert-strip.amber {
+  background: var(--warn-bg);
+  border: 1px solid rgba(217,119,6,0.25);
+  border-left: 4px solid var(--warn);
+  color: #92400E;
+  display: block;
+}
+
+.alert-strip strong { font-weight: 600; }
+
+/* MICROMARKET GRID */
+.micromarket-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.mm-card {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.mm-card:hover { box-shadow: var(--shadow-md); }
+.mm-card.selected { border-color: var(--green); box-shadow: 0 0 0 2px rgba(4,181,101,0.15); }
+
+.mm-card-header {
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.mm-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 2px;
+}
+
+.mm-city {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.mm-overall {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 3px;
+  margin-top: 8px;
+  font-weight: 500;
+}
+
+.mm-overall.green { background: var(--green-wash); color: var(--green-dark); border: 1px solid var(--border-green); }
+.mm-overall.amber { background: var(--warn-bg); color: var(--warn); border: 1px solid rgba(217,119,6,0.3); }
+.mm-overall.red { background: var(--danger-bg); color: var(--danger); border: 1px solid rgba(220,38,38,0.25); }
+
+.mm-indicators {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.mm-ind-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.mm-ind-label {
+  font-size: 12.5px;
+  color: var(--muted);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mm-ind-val {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-2);
+  flex-shrink: 0;
+}
+
+.traffic-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.traffic-dot.green { background: var(--green); }
+.traffic-dot.amber { background: var(--warn); }
+.traffic-dot.red { background: var(--danger); }
+
+/* DETAIL PANEL */
+.detail-panel {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  margin-bottom: 24px;
+}
+
+.detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel-alt);
+}
+
+.detail-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.detail-subtitle {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 3px;
+}
+
+.detail-note {
+  font-size: 13px;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.detail-body {
+  padding: 24px;
+}
+
+/* INDICATOR ROWS */
+.indicator-block {
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.indicator-block:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.ind-top {
+  display: grid;
+  grid-template-columns: 1fr 180px;
+  gap: 24px;
+  align-items: start;
+  margin-bottom: 0;
+}
+
+.ind-meta {}
+
+.ind-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 3px;
+}
+
+.ind-formula {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--green-dark);
+  background: var(--green-wash);
+  border: 1px solid var(--border-green);
+  border-radius: 3px;
+  padding: 2px 7px;
+  display: inline-block;
+  margin-bottom: 5px;
+}
+
+.ind-def {
+  font-size: 13.5px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* SLIDER AREA */
+.ind-slider-area {}
+
+.slider-row {
+  margin-bottom: 14px;
+}
+
+.slider-row-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.slider-row-label {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.slider-row-bottom {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  height: 3px;
+  background: #D1E5DA;
+  border-radius: 2px;
+  outline: none;
+  flex: 1;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--green);
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(4,181,101,0.3);
+  transition: transform 0.15s;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.25); }
+
+.slider-val {
+  font-family: 'DM Mono', monospace;
+  font-size: 22px;
+  font-weight: 800;
+  min-width: 60px;
+  text-align: right;
+  flex-shrink: 0;
+  letter-spacing: -0.03em;
+  transition: color 0.2s ease;
+}
+
+.slider-val.green { color: var(--green-dark); }
+.slider-val.amber { color: var(--warn); }
+.slider-val.red { color: var(--danger); }
+.slider-val.neutral { color: var(--ink-2); }
+
+/* STATUS + ESCALATION */
+.ind-status-area {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.escalation-full {
+  margin-top: 14px;
+  border-radius: 8px;
+  padding: 14px 18px;
+  font-size: 14.5px;
+  line-height: 1.65;
+  border-left: 4px solid transparent;
+}
+
+.escalation-full .escalation-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 7px;
+  font-weight: 600;
+}
+
+.escalation-full.green {
+  background: var(--green-wash);
+  border-left-color: var(--green);
+  color: var(--green-dark);
+}
+.escalation-full.green .escalation-label { color: var(--green-dark); }
+
+.escalation-full.amber {
+  background: var(--warn-bg);
+  border-left-color: var(--warn);
+  color: #92400E;
+}
+.escalation-full.amber .escalation-label { color: var(--warn); }
+
+.escalation-full.red {
+  background: var(--danger-bg);
+  border-left-color: var(--danger);
+  color: #991B1B;
+}
+.escalation-full.red .escalation-label { color: var(--danger); }
+
+.escalation-full strong { font-weight: 600; }
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-weight: 500;
+  margin-bottom: 10px;
+}
+
+.status-badge.green { background: var(--green-wash); color: var(--green-dark); border: 1px solid var(--border-green); }
+.status-badge.amber { background: var(--warn-bg); color: var(--warn); border: 1px solid rgba(217,119,6,0.3); }
+.status-badge.red { background: var(--danger-bg); color: var(--danger); border: 1px solid rgba(220,38,38,0.25); }
+
+/* escalation-box replaced by escalation-full */
+
+/* BENCHMARK BAR CHART */
+.bench-chart {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bench-row {
+  display: grid;
+  grid-template-columns: 130px 1fr 52px;
+  align-items: center;
+  gap: 10px;
+}
+
+.bench-row-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  text-align: right;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+.bench-row-label.benchmark { color: var(--green-dark); font-weight: 500; }
+
+.bench-bar-track {
+  height: 22px;
+  background: rgba(0,0,0,0.04);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.bench-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.35s cubic-bezier(0.4,0,0.2,1);
+  position: relative;
+}
+
+.bench-bar-fill.benchmark-bar {
+  background: var(--green-dark);
+  opacity: 0.85;
+}
+
+.bench-bar-fill.market-green  { background: var(--green); }
+.bench-bar-fill.market-amber  { background: var(--warn); }
+.bench-bar-fill.market-red    { background: var(--danger); }
+
+.bench-row-val {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.bench-row-val.benchmark { color: var(--green-dark); }
+.bench-row-val.market-green  { color: var(--green-dark); }
+.bench-row-val.market-amber  { color: var(--warn); }
+.bench-row-val.market-red    { color: var(--danger); }
+
+.bench-delta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  padding: 6px 10px;
+  border-radius: 5px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.bench-delta.delta-green  { background: var(--green-wash); color: var(--green-dark); }
+.bench-delta.delta-amber  { background: var(--warn-bg);    color: #92400E; }
+.bench-delta.delta-red    { background: var(--danger-bg);  color: #991B1B; }
+.bench-delta.delta-same   { background: var(--green-wash); color: var(--green-dark); }
+
+.bench-note {
+  font-family: 'DM Mono', monospace;
+  font-size: 10.5px;
+  color: var(--muted-light);
+  font-style: italic;
+  margin-top: 6px;
+}
+
+/* THRESHOLD TABLE */
+.threshold-bar {
+  display: flex;
+  height: 6px;
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 6px 0 8px;
+  gap: 2px;
+}
+
+.threshold-seg {
+  height: 100%;
+  border-radius: 2px;
+}
+
+.threshold-seg.red-seg { background: var(--danger); flex: var(--red-flex, 1); }
+.threshold-seg.amber-seg { background: var(--warn); flex: var(--amber-flex, 1); }
+.threshold-seg.green-seg { background: var(--green); flex: var(--green-flex, 1); }
+
+.threshold-labels {
+  display: flex;
+  justify-content: space-between;
+  font-family: 'DM Mono', monospace;
+  font-size: 10.5px;
+  color: var(--muted);
+}
+
+/* COVERAGE INDICATOR - special layout */
+.coverage-display {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.cov-stat {
+  background: var(--panel-alt);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 12px 14px;
+  text-align: center;
+}
+
+.cov-stat-val {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin-bottom: 4px;
+}
+
+.cov-stat-val.green { color: var(--green-dark); }
+.cov-stat-val.amber { color: var(--warn); }
+.cov-stat-val.red { color: var(--danger); }
+.cov-stat-val.neutral { color: var(--ink-2); }
+
+.cov-stat-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* BRIDGE NOTE */
+.bridge-note {
+  background: var(--purple-bg);
+  border: 1px solid var(--purple-border);
+  border-left: 4px solid var(--purple);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+}
+
+.bridge-note-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--purple);
+  margin-bottom: 5px;
+}
+
+.bridge-note-text {
+  font-size: 14px;
+  color: #4C1D95;
+  line-height: 1.6;
+}
+
+.bridge-note-text strong { font-weight: 600; }
+
+/* SIMULATE BUTTON */
+.simulate-btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  padding: 5px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 12px;
+  transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.simulate-btn:hover {
+  border-color: var(--green);
+  color: var(--green-dark);
+  background: var(--green-wash);
+}
+
+.simulate-btn.active {
+  border-color: var(--green);
+  color: var(--green-dark);
+  background: var(--green-wash);
+}
+
+.slider-panel {
+  display: none;
+  margin-top: 12px;
+  padding: 14px 16px;
+  background: var(--panel-alt);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.slider-panel.open { display: block; }
+
+/* BENCHMARK CHIP */
+.benchmark-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: var(--header-bg);
+  color: var(--green);
+  border: 1px solid rgba(4,181,101,0.3);
+  padding: 2px 8px;
+  border-radius: 3px;
+  margin-top: 6px;
+  font-weight: 500;
+}
+
+/* SOURCE FOOTER */
+.source-footer {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+  border-top: 1px solid var(--border);
+  padding-top: 20px;
+  margin-top: 8px;
+}
+
+/* ACCORDION */
+.accordion-wrap {
+  margin-bottom: 20px;
+}
+
+.accordion-item {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+
+.accordion-trigger {
+  width: 100%;
+  background: var(--panel-bg);
+  border: none;
+  border-bottom: 1px solid transparent;
+  padding: 16px 22px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s ease;
+}
+
+.accordion-trigger:hover { background: #F4FCF8; }
+
+.accordion-item.open .accordion-trigger {
+  background: var(--green-wash);
+  border-bottom: 1px solid rgba(4,181,101,0.2);
+}
+
+.acc-icon {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  color: var(--green);
+  min-width: 18px;
+}
+
+.acc-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink-2);
+  flex: 1;
+}
+
+.acc-chevron {
+  font-size: 14px;
+  color: var(--muted);
+  transition: transform 0.25s ease;
+  display: inline-block;
+}
+
+.accordion-item.open .acc-chevron {
+  transform: rotate(180deg);
+  color: var(--green);
+}
+
+.accordion-body {
+  display: none;
+  padding: 24px 22px;
+  background: #FAFCFB;
+  border-top: 1px solid var(--border);
+}
+
+.accordion-item.open .accordion-body {
+  display: block;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.acc-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.acc-step {
+  display: grid;
+  grid-template-columns: 60px 1fr;
+  gap: 14px;
+  align-items: start;
+}
+
+.acc-step-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  color: var(--green);
+  text-transform: uppercase;
+  padding-top: 2px;
+}
+
+.acc-step-text {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.acc-step-text strong { color: var(--ink); font-weight: 500; }
+
+.assumptions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.assumption-row {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 14px;
+  align-items: start;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.assumption-row:last-child { border-bottom: none; padding-bottom: 0; }
+
+.assumption-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 3px 7px;
+  border-radius: 3px;
+  text-align: center;
+  margin-top: 2px;
+}
+
+.assumption-tag.locked { background: rgba(4,181,101,0.12); color: var(--green); }
+.assumption-tag.assumed { background: rgba(245,158,11,0.12); color: var(--warn); }
+.assumption-tag.limit { background: rgba(239,68,68,0.1); color: var(--danger); }
+
+.assumption-text { font-size: 14px; color: var(--muted); line-height: 1.6; }
+.assumption-text strong { color: var(--ink); font-weight: 500; }
+
+@media (max-width: 1100px) {
+  .micromarket-grid { grid-template-columns: repeat(3, 1fr); }
+  .glossary-grid { grid-template-columns: repeat(3, 1fr); }
+  .system-summary { grid-template-columns: repeat(2, 1fr); }
+  .ind-top { grid-template-columns: 1fr; gap: 12px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div>
+    <div class="appendix-tag">Built by Archit Kannan</div>
+    <h1>Micromarket Ops Scorecard</h1>
+    <div class="header-subtitle">5 simulated micromarkets, 5 key indicators. This scorecard defines the governance design: which indicators matter, what thresholds trigger action, and what the ops team does next.</div>
+  </div>
+  <div class="header-meta">
+    <div>All inputs from <span>verified public sources</span></div>
+    <div style="margin-top:3px">Weekly Review Instrument · Not a Real-Time Dashboard</div>
+  </div>
+</div>
+
+<!-- INSTRUMENT NOTE + GLOSSARY TOGGLE -->
+<div class="instrument-note">
+  <div class="note-text">
+    <strong>Ownership:</strong> This scorecard is owned by the City Ops function. It covers the professional supply lifecycle, including deployment, productivity, and retention. Demand-side metrics (customer retention, repeat booking rate, slot conversion) are tracked in a companion instrument owned by Growth.<br> <br><strong>In production:</strong> each indicator is pre-populated every Monday from an overnight batch pull of booking data. Each city ops lead opens a most updated view of their micromarket before the weekly review begins, with Red markets already flagged.<br> <br><strong>To stress-test the framework:</strong> use the Simulate button on any indicator to test how the escalation logic responds under different readings before any data infrastructure is built.
+  </div>
+  <button class="glossary-btn" onclick="toggleGlossary()">Indicator definitions</button>
+</div>
+
+<!-- GLOSSARY PANEL -->
+<div class="glossary-panel" id="glossary-panel">
+  <div class="glossary-title">Indicator definitions - read before reviewing micromarket data</div>
+  <div class="glossary-grid">
+
+    <div class="glossary-card">
+      <div class="glossary-card-term">Professional Coverage %</div>
+      <div class="glossary-card-formula"># of active professionals ÷ # of target professionals x 100</div>
+      <div class="glossary-card-def">Ratio of active professionals to the target required for this micromarket at the 7-booking productivity benchmark. Shortfall = target - active, shown as an absolute number.</div>
+      <div class="glossary-card-why"><strong>Why it matters:</strong><br> A micromarket cannot fulfil its demand allocation if coverage is in Red. This is the deployment decision indicator, it tells the ops team where to send the next trained cohort before any other deployment decision is made.</div>
+    </div>
+
+    <div class="glossary-card">
+      <div class="glossary-card-term">Fulfilled Booking %</div>
+      <div class="glossary-card-formula">Completed bookings ÷ Accepted bookings x 100</div>
+      <div class="glossary-card-def">Percentage of accepted bookings completed as promised (professional arrived, on time, and completed the service). A booking is fulfilled only when the professional logs check-out with no cancellation or no-show recorded.</div>
+      <div class="glossary-card-why"><strong>Why it matters:</strong><br> This is the customer promise. The Play Store review samples identifies unfulfilled bookings as the primary driver of 1-star ratings and churn. Below 92%, trust degrades faster than marketing can rebuild it.</div>
+    </div>
+
+    <div class="glossary-card">
+      <div class="glossary-card-term">Slot Availability %</div>
+      <div class="glossary-card-formula">Available slots ÷ Total possible slots x 100</div>
+      <div class="glossary-card-def">Percentage of shift-hour slots open for booking at the point a customer requests. Measured daily, averaged weekly. A slot is available if a professional is scheduled, their shift covers that window, and no conflicting booking exists.</div>
+      <div class="glossary-card-why"><strong>Why it matters:</strong><br> If customers cannot find a slot they either wait or leave. Slot availability catches the supply constraint <strong>before the customer files a complaint</strong>. It is an earlier warning than the fulfilled booking rate.</div>
+    </div>
+
+    <div class="glossary-card">
+      <div class="glossary-card-term">Utilisation %</div>
+      <div class="glossary-card-formula">Actual bookings per professional per day ÷ 7 x 100</div>
+      <div class="glossary-card-def">Actual bookings per professional per active shift day as a percentage of the 7-booking benchmark. Measured as the trailing 7-day average across all active professionals in the micromarket.</div>
+      <div class="glossary-card-why"><strong>Why it matters:</strong><br> Professional wages accrue across the full shift regardless of bookings completed. Every point below the benchmark is idle shift cost. At 4 bookings/day (the current platform average), Pronto is running at 57% of its own productivity standard of 7 bookings/day.</div>
+    </div>
+
+    <div class="glossary-card">
+      <div class="glossary-card-term">30-Day Professional Retention %</div>
+      <div class="glossary-card-formula"># of professionals active at day 30 ÷ # of professionals activated x 100</div>
+      <div class="glossary-card-def">Percentage of professionals activated this month who are still active 30 days later. Active at day 30 = completed at least one booking in the prior 7 days. Platform-wide retention is 70%, meaning 30% of the active base churns monthly.</div>
+      <div class="glossary-card-why"><strong>Why it matters:</strong><br> Retention of professionals is the leading indicator of quality compounding. A micromarket with low retention is permanently resetting its experience base. When every churned professional is replaced by a less experienced one, the quality standard erodes with every booking.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- ACCORDIONS: HOW TO USE / ASSUMPTIONS / LIMITATIONS -->
+  <div class="accordion-wrap">
+
+    <div class="accordion-item" id="acc-howto">
+      <button class="accordion-trigger" onclick="toggleAcc('howto')">
+        <span class="acc-title">How to use this scorecard</span>
+        <span class="acc-chevron">↓</span>
+      </button>
+      <div class="accordion-body">
+        <div class="acc-grid">
+          <div class="acc-step">
+            <div class="acc-step-num">Step 1</div>
+            <div class="acc-step-text"><strong>Read the system summary first.</strong> The four cards at the top give you the week's supply health headline: how many markets need immediate action, how many need monitoring, total professional shortfall across all markets, and the average fulfilled booking rate. If any market is in Red, the alert strip below the summary will tell you which ones.</div>
+          </div>
+          <div class="acc-step">
+            <div class="acc-step-num">Step 2</div>
+            <div class="acc-step-text"><strong>Select a micromarket card to open the detail panel.</strong> Each card shows all five indicators with traffic-light status. Click any card to see the full indicator breakdown, threshold bar, and the next best action. Every next best action names who acts, by when, and what they do, in a production environment. This becomes the basis for the weekly ops review agenda.</div>
+          </div>
+          <div class="acc-step">
+            <div class="acc-step-num">Step 3</div>
+            <div class="acc-step-text"><strong>Adjust sliders to test threshold calibration.</strong> Every indicator value is editable for demo purposes. Drag a slider to simulate a different reading and watch the status, escalation trigger, and system summary update in real time.</div>
+          </div>
+          <div class="acc-step">
+            <div class="acc-step-num">Step 4</div>
+            <div class="acc-step-text"><strong>Open indicator definitions for formula and context.</strong> The "Indicator definitions" button above opens a glossary panel with the full formula, definition, and business rationale for each indicator. Read this before calibrating thresholds or interpreting edge cases.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item" id="acc-assumptions">
+      <button class="accordion-trigger" onclick="toggleAcc('assumptions')">
+        <span class="acc-title">Assumptions</span>
+        <span class="acc-chevron">↓</span>
+      </button>
+      <div class="accordion-body">
+        <div class="assumptions-list">
+          <div class="assumption-row">
+            <div class="assumption-tag locked">Verified</div>
+            <div class="assumption-text"><strong>7 bookings/professional/day</strong> is the active micromarket productivity benchmark sourced from Moneycontrol, March 2026. It is used as the denominator in Utilisation % and as the basis for calculating target professionals in Professional Coverage.</div>
+          </div>
+          <div class="assumption-row">
+            <div class="assumption-tag locked">Verified</div>
+            <div class="assumption-text"><strong>70% monthly retention</strong> is the platform-wide figure from the CEO podcast, April 2026. The 30-Day Retention indicator uses 75% as its Green threshold, set slightly above the platform average to distinguish strong micromarkets from the baseline.</div>
+          </div>
+          <div class="assumption-row">
+            <div class="assumption-tag locked">Verified</div>
+            <div class="assumption-text"><strong>500+ bookings/day</strong> in the best micromarket (Moneycontrol, March 2026) is the basis for the Sector 45 Gurugram default values, which are calibrated to represent a best-in-class micromarket.</div>
+          </div>
+          <div class="assumption-row">
+            <div class="assumption-tag assumed">Assumed</div>
+            <div class="assumption-text"><strong>All default indicator values are simulated.</strong> Micromarket names, indicator readings, target professional counts, and active professional counts are illustrative. They are set to span the realistic range of market maturity (best-in-class to struggling) so the framework can be stress-tested across scenarios. None of these values represent Pronto's actual operational state.</div>
+          </div>
+          <div class="assumption-row">
+            <div class="assumption-tag assumed">Assumed</div>
+            <div class="assumption-text"><strong>Thresholds are hypotheses, not recommendations.</strong> The Green/Amber/Red cutoffs for each indicator (e.g. 92% for Fulfilled Booking Rate, 85% for Slot Availability Rate) are derived from the review corpus and public benchmark data. They have no Pronto-specific calibration. The correct thresholds should be set by Pronto using internal cohort data from established micromarkets.</div>
+          </div>
+          <div class="assumption-row">
+            <div class="assumption-tag assumed">Assumed</div>
+            <div class="assumption-text"><strong>Weekly batch aggregation is the assumed data architecture.</strong> Each indicator is specified as a weekly aggregate, not a real-time feed. This reflects the realistic data infrastructure available at Pronto's current engineering maturity. A real-time dashboard would require a stream processing layer that does not yet exist.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item" id="acc-limitations">
+      <button class="accordion-trigger" onclick="toggleAcc('limitations')">
+        <span class="acc-title">Limitations</span>
+        <span class="acc-chevron">↓</span>
+      </button>
+      <div class="accordion-body">
+        <div class="assumptions-list">
+          <div class="assumption-row">
+            <div class="assumption-tag limit">Scope</div>
+            <div class="assumption-text"><strong>Five micromarkets is a prototype sample, not a representative view.</strong> A production deployment would cover all active micromarkets across all cities. The five shown here are illustrative of the range of market maturity states. The framework scales to any number of micromarkets: the governance logic does not change.</div>
+          </div>
+          <div class="assumption-row">
+            <div class="assumption-tag limit">Scope</div>
+            <div class="assumption-text"><strong>Micromarket boundaries are assumed, not verified.</strong> The geographic polygon that defines a micromarket, which bookings belong to it, which professionals are assigned to it, is an internal operational decision. This prototype assumes boundaries exist and are stable. In practice, boundary changes would affect all five indicators simultaneously.</div>
+          </div>
+          <div class="assumption-row">
+            <div class="assumption-tag limit">Scope</div>
+            <div class="assumption-text"><strong>The Professional Coverage calculation assumes the target is known.</strong> Target professionals per micromarket = micromarket's target bookings per day divided by 7. If the micromarket-level booking target has not been formally allocated, the coverage indicator cannot be calculated. Establishing that allocation is a prerequisite for this indicator to go live.</div>
+          </div>
+          <div class="assumption-row">
+            <div class="assumption-tag limit">Data</div>
+            <div class="assumption-text"><strong>The escalation protocols are governance design, not operational standing orders.</strong> The "next best action" text for each indicator status is a specification of what the protocol should say. Adapting it to Pronto's actual ops team structure, role definitions, and escalation hierarchy requires an internal review before it becomes a live operating procedure.</div>
+          </div>
+          <div class="assumption-row">
+            <div class="assumption-tag limit">Data</div>
+            <div class="assumption-text"><strong>Circular coverage calculation risk.</strong> Professional Coverage uses target professionals as the denominator, which is itself derived from the bookings target. If the target is revised, the coverage percentage changes even if the number of active professionals stays the same. Reviewers should always read the absolute shortfall number alongside the percentage.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end accordion-wrap -->
+
+  <!-- SIMULATION DISCLAIMER BANNER -->
+  <div style="
+    background: #FFFBEB;
+    border: 1px solid rgba(217,119,6,0.3);
+    border-left: 4px solid #D97706;
+    border-radius: 8px;
+    padding: 14px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  ">
+    <div style="font-size: 18px; line-height: 1; margin-top: 1px; flex-shrink: 0;">⚠</div>
+    <div>
+      <div style="font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #92400E; margin-bottom: 5px;">Prototype — Illustrative Data · Supply Side Only</div>
+      <div style="font-size: 14.5px; color: #78350F; line-height: 1.6;"><strong>All values in this prototype are illustrative.</strong> Micromarket names, indicator readings, and threshold levels are set to demonstrate the framework and governance logic, not to represent Pronto's actual operational state. In a live engagement, all values would be sourced directly from Pronto's operational data feeds. Replace any figure here with a real number and the model recalculates correctly.</div>
+    </div>
+  </div>
+
+  <!-- SYSTEM SUMMARY -->
+  <div class="system-summary" id="system-summary"></div>
+
+  <!-- ALERT STRIP -->
+  <div class="alert-strip" id="alert-strip"></div>
+
+  <!-- MICROMARKET CARDS -->
+  <div class="micromarket-grid" id="mm-grid"></div>
+
+
+  <!-- DETAIL PANEL -->
+  <div class="detail-panel" id="detail-panel">
+    <div class="detail-header">
+      <div>
+        <div class="detail-name" id="detail-name">Select a micromarket above</div>
+        <div class="detail-subtitle" id="detail-subtitle">Click any card to review indicators and escalation triggers</div>
+      </div>
+      <div class="detail-note">Use sliders to simulate a reading or stress-test a threshold</div>
+    </div>
+    <div class="detail-body" id="detail-body">
+      <div style="text-align:center;padding:40px;color:var(--muted);font-size: 15px">
+        Click a micromarket card above to open the full indicator review.
+      </div>
+    </div>
+  </div>
+
+
+</div>
+
+<script>
+// -------------------------------------------------------
+// DATA MODEL
+// -------------------------------------------------------
+const INDICATORS = [
+  {
+    id: 'cov',
+    name: 'Professional Coverage %',
+    formula: '# of active professionals ÷ # of target professionals x 100',
+    unit: '%',
+    min: 20, max: 150, step: 1,
+    thresholds: { green: 90, amber: 75 },
+    thresholdLabel: { red: '<75%', amber: '75-90%', green: '>90%' },
+    isCoverage: true,
+    escalation: {
+      green: 'Professional supply is meeting or approaching the micromarket target. Monitor for demand growth that may require a new target recalculation within the next 30 days.',
+      amber: 'Shortfall is material but manageable. Flag to Quality Manager for priority allocation in the next onboarding cohort. This micromarket should be in the top 3 deployment targets for the next training cycle output. Do not wait for Red before acting.',
+      red: 'Critical supply shortfall. This micromarket cannot fulfil its demand allocation at current professional count. Immediate action: (1) request emergency reallocation of 10-15 professionals from nearest Green-coverage micromarket, (2) escalate to Pronto Centre manager to prioritise this micromarket in the next cohort, (3) temporarily narrow the booking acceptance polygon to the highest-density part of the micromarket to protect fulfilment rate.'
+    }
+  },
+  {
+    id: 'fbr',
+    name: 'Fulfilled Booking %',
+    formula: 'Completed bookings ÷ Accepted x 100',
+    unit: '%',
+    min: 50, max: 100, step: 1,
+    thresholds: { green: 92, amber: 80 },
+    thresholdLabel: { red: '<80%', amber: '80-92%', green: '>92%' },
+    escalation: {
+      green: 'Fulfilment rate is healthy. No action required this week. Monitor for downward trend across consecutive weeks.',
+      amber: 'Quality Manager to review cancellation and no-show logs within 24 hours. Identify whether the failure pattern is professional-driven (supply side) or booking-acceptance-driven (system side). Report to ops leadership by end of week.',
+      red: 'Ops leadership review same day. Immediate audit of last 7 days of unfulfilled bookings. If supply-driven: authorise emergency professional reallocation from adjacent micromarket. If system-driven: suspend instant booking acceptance in this micromarket until fulfilment rate recovers above 85%.'
+    }
+  },
+  {
+    id: 'sar',
+    name: 'Slot Availability %',
+    formula: 'Available slots ÷ Total possible slots x 100',
+    unit: '%',
+    min: 30, max: 100, step: 1,
+    thresholds: { green: 85, amber: 70 },
+    thresholdLabel: { red: '<70%', amber: '70-85%', green: '>85%' },
+    escalation: {
+      green: 'Slot availability is healthy. Demand is being absorbed by current supply. No action required.',
+      amber: 'Cross-check shift schedule against demand forecast for the coming week. If demand is growing: flag to Quality Manager for accelerated onboarding. If supply is idle: check for scheduling mismatches between professional shift hours and peak booking windows.',
+      red: 'Emergency supply review. Check for unplanned professional absences, shift no-shows, or scheduling gaps. If structural: request emergency reallocation from nearest micromarket with Green slot availability. Flag micromarket for priority cohort deployment in next onboarding cycle. See Professional Coverage indicator.'
+    }
+  },
+  {
+    id: 'util',
+    name: 'Utilisation %',
+    formula: 'Actual bookings per proffesional per day ÷ 7 (benchmark) x 100',
+    unit: '%',
+    min: 20, max: 100, step: 1,
+    thresholds: { green: 80, amber: 57 },
+    thresholdLabel: { red: '<57%', amber: '57-80%', green: '>80%' },
+    escalation: {
+      green: 'Utilisation is at or above 80% of the 7-booking benchmark. Shift hours are being productively used. Monitor for signs of professional burnout if utilisation approaches 100%.',
+      amber: 'This is the platform average. Acceptable for developing micromarkets - concerning for established ones. Review routing logic: are professionals being positioned in low-demand polygons within the micromarket? Check travel time between bookings as a drag on productive hours.',
+      red: 'Utilisation is critically low. Idle shift cost is destroying contribution margin. Three possible causes: demand is insufficient (check booking volume), professionals are poorly routed (check travel time), or professionals are not showing up for shifts (check attendance). Each requires a different intervention - do not assume cause before checking data.'
+    }
+  },
+  {
+    id: 'ret',
+    name: '30-Day Profesional Retention %',
+    formula: '# of professionals active at day 30 ÷ # of professionals activated x 100',
+    unit: '%',
+    min: 30, max: 100, step: 1,
+    thresholds: { green: 75, amber: 60 },
+    thresholdLabel: { red: '<60%', amber: '60-75%', green: '>75%' },
+    escalation: {
+      green: 'Retention is above platform average. Quality is compounding. New professionals are staying long enough to build experience and rating history. Protect this - do not dilute with rushed onboarding.',
+      amber: 'Approaching the platform churn floor. Quality Manager to proactively reach out to professionals activated in the last 30 days who show declining booking frequency. Identify whether churn is income-driven (utilisation too low), safety-driven (incidents or discomfort), or logistics-driven (commute, scheduling). Each requires a different retention intervention.',
+      red: 'Retention has fallen below the level at which quality can compound. The professional base is resetting faster than experience can build. Mandatory exit interview protocol for all professionals who churned this month. Escalate findings to ops leadership. This micromarket should be flagged for priority attention in the next Pronto Centre cohort deployment cycle.'
+    }
+  }
+];
+
+// Micromarkets with realistic simulated defaults
+const MICROMARKETS = [
+  {
+    name: 'Sector 45',
+    city: 'Gurugram - NCR',
+    note: 'Best-in-class benchmark micromarket. Above break-even. Internal standard against which all others are measured.',
+    type: 'best',
+    defaults: { fbr: 96, sar: 91, util: 88, ret: 82, cov: 97, targetProfs: 72, activeProfs: 70 }
+  },
+  {
+    name: 'Koramangala',
+    city: 'Bangalore',
+    note: 'Strong second-city market. High-density urban demand. Growing toward benchmark levels.',
+    type: 'strong',
+    defaults: { fbr: 89, sar: 83, util: 74, ret: 71, cov: 84, targetProfs: 58, activeProfs: 49 }
+  },
+  {
+    name: 'Andheri West',
+    city: 'Mumbai',
+    note: 'Mid-tier growth market. Mumbai is the next major expansion city. Demand ahead of supply.',
+    type: 'mid',
+    defaults: { fbr: 82, sar: 71, util: 62, ret: 65, cov: 73, targetProfs: 44, activeProfs: 32 }
+  },
+  {
+    name: 'Wakad',
+    city: 'Pune',
+    note: 'Newer market. Expansion-stage. Supply thin relative to declared demand. Requires targeted deployment.',
+    type: 'developing',
+    defaults: { fbr: 76, sar: 63, util: 54, ret: 58, cov: 67, targetProfs: 30, activeProfs: 20 }
+  },
+  {
+    name: 'Dwarka Sector 6',
+    city: 'Delhi - NCR',
+    note: 'Struggling despite NCR geography. Lower density than Gurugram. Routing inefficiency suspected.',
+    type: 'struggling',
+    defaults: { fbr: 71, sar: 58, util: 46, ret: 52, cov: 61, targetProfs: 36, activeProfs: 22 }
+  }
+];
+
+// State
+let state = MICROMARKETS.map(mm => ({ ...mm.defaults }));
+let selectedIdx = null;
+
+// -------------------------------------------------------
+// HELPERS
+// -------------------------------------------------------
+function getStatus(ind, val) {
+  if (val >= ind.thresholds.green) return 'green';
+  if (val >= ind.thresholds.amber) return 'amber';
+  return 'red';
+}
+
+function getOverallStatus(mmIdx) {
+  const s = state[mmIdx];
+  const statuses = INDICATORS.map(ind => getStatus(ind, s[ind.id]));
+  if (statuses.includes('red')) return 'red';
+  if (statuses.includes('amber')) return 'amber';
+  return 'green';
+}
+
+function statusLabel(s) {
+  if (s === 'green') return 'Healthy';
+  if (s === 'amber') return 'Monitor';
+  return 'Action required';
+}
+
+function statusDot(s) {
+  return s === 'green' ? '●' : s === 'amber' ? '◑' : '✕';
+}
+
+function fmt(n) { return Math.round(n).toLocaleString('en-IN'); }
+
+// -------------------------------------------------------
+// SYSTEM SUMMARY
+// -------------------------------------------------------
+function renderSummary() {
+  const redCount = state.filter((_, i) => getOverallStatus(i) === 'red').length;
+  const amberCount = state.filter((_, i) => getOverallStatus(i) === 'amber').length;
+  const greenCount = state.filter((_, i) => getOverallStatus(i) === 'green').length;
+
+  const totalShortfall = state.reduce((acc, s) => {
+    const mm = MICROMARKETS[state.indexOf(s)];
+    return acc + Math.max(0, s.targetProfs - s.activeProfs);
+  }, 0);
+
+  // Avg fulfilled
+  const avgFbr = state.reduce((a, s) => a + s.fbr, 0) / state.length;
+
+  document.getElementById('system-summary').innerHTML = `
+    <div class="summary-card">
+      <div class="summary-label">Markets needing action</div>
+      <div class="summary-value ${redCount > 0 ? 'red' : 'green'}">${redCount}</div>
+      <div class="summary-sub">of 5 micromarkets in Red status across any indicator</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-label">Markets to monitor</div>
+      <div class="summary-value ${amberCount > 0 ? 'amber' : 'green'}">${amberCount}</div>
+      <div class="summary-sub">of 5 micromarkets in Amber status - no immediate action but trajectory needs to be closely tracked</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-label">System-wide professional shortfall</div>
+      <div class="summary-value ${totalShortfall > 30 ? 'red' : totalShortfall > 10 ? 'amber' : 'green'}">${fmt(totalShortfall)}</div>
+      <div class="summary-sub">professionals short across all micromarkets vs targets</div>
+    </div>
+    <div class="summary-card" style="border-left: 3px solid var(--green-dark);">
+      <div class="summary-label">Avg fulfilled booking rate</div>
+      <div class="summary-value ${avgFbr < 80 ? 'red' : avgFbr < 92 ? 'amber' : 'green'}">${Math.round(avgFbr)}%</div>
+      <div class="summary-sub">Benchmarked against Sector 45 Gurugram (${state[0].fbr}%) - the internal standard all other markets are measured against.</div>
+    </div>
+  `;
+
+  // Alert strip
+  const strip = document.getElementById('alert-strip');
+  const redNames = MICROMARKETS.filter((_, i) => getOverallStatus(i) === 'red').map(m => m.name);
+  if (redNames.length > 0) {
+    strip.className = 'alert-strip red';
+    strip.innerHTML = `<strong>Immediate action required:</strong> ${redNames.join(', ')} ${redNames.length === 1 ? 'is' : 'are'} in Red status on one or more indicators. Review the detail panel below and execute the escalation protocol before this week's ops review closes.`;
+  } else {
+    const amberNames = MICROMARKETS.filter((_, i) => getOverallStatus(i) === 'amber').map(m => m.name);
+    if (amberNames.length > 0) {
+      strip.className = 'alert-strip amber';
+      strip.innerHTML = `<strong>Monitoring required:</strong> ${amberNames.join(', ')} ${amberNames.length === 1 ? 'is' : 'are'} in Amber on one or more indicators. No immediate crisis - but trajectory needs watching this week.`;
+    } else {
+      strip.className = 'alert-strip';
+    }
+  }
+}
+
+// -------------------------------------------------------
+// MICROMARKET CARDS
+// -------------------------------------------------------
+function renderCards() {
+  const grid = document.getElementById('mm-grid');
+  grid.innerHTML = MICROMARKETS.map((mm, i) => {
+    const overall = getOverallStatus(i);
+    const s = state[i];
+    return `
+      <div class="mm-card ${selectedIdx === i ? 'selected' : ''}" onclick="selectMM(${i})">
+        <div class="mm-card-header">
+          <div class="mm-name">${mm.name}</div>
+          <div class="mm-city">${mm.city}</div>
+          ${mm.type === 'best' ? '<div class="benchmark-chip">★ Benchmark market</div>' : ''}
+          <div class="mm-overall ${overall}">${statusDot(overall)} ${statusLabel(overall)}</div>
+        </div>
+        <div class="mm-indicators">
+          ${INDICATORS.map(ind => {
+            const val = s[ind.id];
+            const st = getStatus(ind, val);
+            const display = ind.id === 'cov' ? `${val}%` : `${val}${ind.unit}`;
+            return `
+              <div class="mm-ind-row">
+                <div class="mm-ind-label">${ind.name.split(' ').slice(0,2).join(' ')}</div>
+                <div class="mm-ind-val">${display}</div>
+                <div class="traffic-dot ${st}"></div>
+              </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// Track which simulate panels are open across re-renders
+const openSimPanels = new Set();
+
+// -------------------------------------------------------
+// DETAIL PANEL
+// -------------------------------------------------------
+function selectMM(idx) {
+  selectedIdx = idx;
+  openSimPanels.clear(); // reset sim state on market change
+  renderCards();
+  renderDetail();
+}
+
+function renderDetail() {
+  if (selectedIdx === null) return;
+  const mm = MICROMARKETS[selectedIdx];
+  const s = state[selectedIdx];
+
+  document.getElementById('detail-name').textContent = `${mm.name} - ${mm.city}`;
+  document.getElementById('detail-subtitle').textContent = mm.note;
+
+  const body = document.getElementById('detail-body');
+  body.innerHTML = INDICATORS.map((ind, ii) => {
+    const val = s[ind.id];
+    const st = getStatus(ind, val);
+    const isCov = ind.isCoverage;
+
+    // Coverage display
+    const targetP = s.targetProfs;
+    const activeP = s.activeProfs;
+    const shortfall = Math.max(0, targetP - activeP);
+    const shortfallColor = shortfall === 0 ? 'green' : shortfall <= targetP * 0.15 ? 'amber' : 'red';
+
+            // Bar chart: normalised widths within indicator range
+            const benchVal    = state[0][ind.id];
+            const range       = ind.max - ind.min;
+            const currentW    = Math.min(100, Math.max(2, ((val      - ind.min) / range) * 100)).toFixed(1);
+            const benchW      = Math.min(100, Math.max(2, ((benchVal - ind.min) / range) * 100)).toFixed(1);
+            const isBenchmark = selectedIdx === 0;
+            const delta       = val - benchVal;
+            const deltaAbs    = Math.abs(delta).toFixed(1);
+            const deltaSign   = delta >= 0 ? '+' : '-';
+            const marketBarClass = `market-${st}`;
+            const deltaClass  = delta >= 0 ? 'delta-green' : (st === 'amber' ? 'delta-amber' : 'delta-red');
+
+    return `
+      <div class="indicator-block">
+        <div class="ind-top">
+
+          <div class="ind-left">
+            <div class="ind-name">${ind.name}</div>
+            <div class="ind-formula">${ind.formula}</div>
+            <div class="ind-def">${getShortDef(ind.id)}</div>
+
+            <div class="bench-chart">
+              <div class="bench-row">
+                <div class="bench-row-label benchmark">★ Gurugram</div>
+                <div class="bench-bar-track">
+                  <div class="bench-bar-fill benchmark-bar" style="width:${benchW}%"></div>
+                </div>
+                <div class="bench-row-val benchmark">${benchVal}${ind.unit}</div>
+              </div>
+              <div class="bench-row">
+                <div class="bench-row-label">${isBenchmark ? '★ This market' : 'This market'}</div>
+                <div class="bench-bar-track">
+                  <div class="bench-bar-fill ${isBenchmark ? 'benchmark-bar' : marketBarClass}" style="width:${currentW}%"></div>
+                </div>
+                <div class="bench-row-val ${isBenchmark ? 'benchmark' : marketBarClass}">${val}${ind.unit}</div>
+              </div>
+              ${!isBenchmark ? `
+              <div class="bench-delta ${deltaClass}">
+                ${delta >= 0
+                  ? `Gap to benchmark: <strong>+${deltaAbs}pp above</strong> -- this market is outperforming Gurugram on this indicator`
+                  : `Gap to benchmark: <strong>${deltaAbs}pp below</strong> Gurugram -- close this gap to reach benchmark standard`
+                }
+              </div>` : `
+              <div class="bench-delta delta-same">
+                ★ This is the benchmark market. All other markets are measured against these readings.
+              </div>`}
+              <div class="bench-note">Bars scaled within indicator range (${ind.min}${ind.unit} -- ${ind.max}${ind.unit}). Thresholds: Red ${ind.thresholdLabel.red} · Amber ${ind.thresholdLabel.amber} · Green ${ind.thresholdLabel.green}. Calibrate in production against Sector 45 Gurugram cohort data.</div>
+            </div>
+
+            <button class="simulate-btn" id="sim-btn-${ind.id}" onclick="toggleSimulate('${ind.id}')">⟳ Simulate this metric</button>
+            <div class="slider-panel" id="sim-panel-${ind.id}">
+              <div class="slider-row">
+                <div class="slider-row-top">
+                  <div class="slider-row-label">Simulate a reading</div>
+                  <div class="slider-val ${st}" id="sv-${ind.id}">${val}${ind.unit}</div>
+                </div>
+                <div class="slider-row-bottom">
+                  <input type="range" min="${ind.min}" max="${ind.max}" step="${ind.step}"
+                    value="${val}" oninput="updateVal(${selectedIdx}, '${ind.id}', this.value)" style="flex:1">
+                </div>
+                <div style="display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size: 11px;color:var(--muted);margin-top:3px">
+                  <span>${ind.min}${ind.unit}</span><span>${ind.max}${ind.unit}</span>
+                </div>
+              </div>
+              ${isCov ? `
+              <div class="slider-row">
+                <div class="slider-row-top">
+                  <div class="slider-row-label">Target professionals</div>
+                  <div class="slider-val neutral" id="sv-targetProfs">${targetP}</div>
+                </div>
+                <div class="slider-row-bottom">
+                  <input type="range" min="5" max="120" step="1"
+                    value="${targetP}" oninput="updateCovTarget(${selectedIdx}, this.value)" style="flex:1">
+                </div>
+                <div style="display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size: 11px;color:var(--muted);margin-top:3px">
+                  <span>5</span><span>120</span>
+                </div>
+              </div>
+              <div class="slider-row">
+                <div class="slider-row-top">
+                  <div class="slider-row-label">Active professionals</div>
+                  <div class="slider-val ${st}" id="sv-activeProfs">${activeP}</div>
+                </div>
+                <div class="slider-row-bottom">
+                  <input type="range" min="1" max="120" step="1"
+                    value="${activeP}" oninput="updateCovActive(${selectedIdx}, this.value)" style="flex:1">
+                </div>
+                <div style="display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size: 11px;color:var(--muted);margin-top:3px">
+                  <span>1</span><span>120</span>
+                </div>
+              </div>` : ''}
+            </div>
+          </div>
+
+          <div class="ind-status-area">
+            <div class="status-badge ${st}">${statusDot(st)} ${statusLabel(st)}</div>
+          </div>
+        </div>
+
+        <div class="escalation-full ${st}">
+          <div class="escalation-label">Next best action</div>
+          ${ind.escalation[st]}
+        </div>
+
+        ${isCov ? `
+        <div class="coverage-display">
+          <div class="cov-stat">
+            <div class="cov-stat-val neutral">${targetP}</div>
+            <div class="cov-stat-label">Target professionals</div>
+          </div>
+          <div class="cov-stat">
+            <div class="cov-stat-val ${activeP >= targetP * 0.9 ? 'green' : activeP >= targetP * 0.75 ? 'amber' : 'red'}">${activeP}</div>
+            <div class="cov-stat-label">Active professionals</div>
+          </div>
+          <div class="cov-stat">
+            <div class="cov-stat-val ${shortfallColor}">${shortfall === 0 ? 'None' : shortfall}</div>
+            <div class="cov-stat-label">Shortfall</div>
+          </div>
+        </div>` : ''}
+      </div>`;
+  }).join('');
+
+  // Restore any simulate panels that were open before re-render
+  openSimPanels.forEach(indId => {
+    const panel = document.getElementById(`sim-panel-${indId}`);
+    const btn   = document.getElementById(`sim-btn-${indId}`);
+    if (panel) panel.classList.add('open');
+    if (btn)   { btn.classList.add('active'); btn.textContent = '✕ Close simulation'; }
+  });
+}
+
+function getShortDef(id) {
+  const defs = {
+    fbr: 'Percentage of accepted bookings completed as promised. A booking is fulfilled only when the professional logs check-out with no cancellation or no-show recorded.',
+    sar: 'Percentage of shift-hour slots open for booking at the point of customer request. Measures whether demand can be absorbed by current supply.',
+    util: 'Actual bookings per professional per day as a percentage of the 7-booking benchmark. Measures how productively shift hours are being used.',
+    ret: 'Percentage of professionals activated this month who are still active 30 days later. The leading indicator of quality compounding in this micromarket.',
+    cov: 'Ratio of active professionals to the target required for this micromarket at the 7-booking benchmark. The deployment decision indicator.'
+  };
+  return defs[id] || '';
+}
+
+// -------------------------------------------------------
+// STATE UPDATES
+// -------------------------------------------------------
+function updateVal(mmIdx, indId, val) {
+  state[mmIdx][indId] = parseFloat(val);
+  const ind = INDICATORS.find(i => i.id === indId);
+  const st = getStatus(ind, parseFloat(val));
+  const el = document.getElementById(`sv-${indId}`);
+  if (el) {
+    el.textContent = `${val}${ind.unit}`;
+    el.className = `slider-val ${st}`;
+  }
+  refreshAll();
+}
+
+function updateCovTarget(mmIdx, val) {
+  state[mmIdx].targetProfs = parseInt(val);
+  const activeP = state[mmIdx].activeProfs;
+  const coverage = Math.round((activeP / parseInt(val)) * 100);
+  state[mmIdx].cov = Math.min(150, coverage);
+  const covInd = INDICATORS.find(i => i.id === 'cov');
+  const st = getStatus(covInd, state[mmIdx].cov);
+  const tEl = document.getElementById('sv-targetProfs');
+  const cEl = document.getElementById('sv-cov');
+  if (tEl) tEl.textContent = val;
+  if (cEl) { cEl.textContent = `${state[mmIdx].cov}%`; cEl.className = `slider-val ${st}`; }
+  const aEl = document.getElementById('sv-activeProfs');
+  if (aEl) aEl.className = `slider-val ${st}`;
+  refreshAll();
+}
+
+function updateCovActive(mmIdx, val) {
+  state[mmIdx].activeProfs = parseInt(val);
+  const targetP = state[mmIdx].targetProfs;
+  const coverage = Math.round((parseInt(val) / targetP) * 100);
+  state[mmIdx].cov = Math.min(150, coverage);
+  const covInd = INDICATORS.find(i => i.id === 'cov');
+  const st = getStatus(covInd, state[mmIdx].cov);
+  const aEl = document.getElementById('sv-activeProfs');
+  const cEl = document.getElementById('sv-cov');
+  if (aEl) { aEl.textContent = val; aEl.className = `slider-val ${st}`; }
+  if (cEl) { cEl.textContent = `${state[mmIdx].cov}%`; cEl.className = `slider-val ${st}`; }
+  refreshAll();
+}
+
+function refreshAll() {
+  renderSummary();
+  renderCards();
+  if (selectedIdx !== null) renderDetail();
+}
+
+// -------------------------------------------------------
+// SIMULATE TOGGLE
+// -------------------------------------------------------
+function toggleSimulate(indId) {
+  const panel = document.getElementById(`sim-panel-${indId}`);
+  const btn   = document.getElementById(`sim-btn-${indId}`);
+  if (!panel) return;
+  const isOpen = panel.classList.contains('open');
+  panel.classList.toggle('open', !isOpen);
+  btn.classList.toggle('active', !isOpen);
+  btn.textContent = isOpen ? '⟳ Simulate this metric' : '✕ Close simulation';
+  if (isOpen) {
+    openSimPanels.delete(indId);
+  } else {
+    openSimPanels.add(indId);
+  }
+}
+
+// -------------------------------------------------------
+// ACCORDION
+// -------------------------------------------------------
+function toggleAcc(id) {
+  const item = document.getElementById('acc-' + id);
+  const isOpen = item.classList.contains('open');
+  document.querySelectorAll('.accordion-item').forEach(el => el.classList.remove('open'));
+  if (!isOpen) item.classList.add('open');
+}
+
+// -------------------------------------------------------
+// GLOSSARY
+// -------------------------------------------------------
+function toggleGlossary() {
+  const panel = document.getElementById('glossary-panel');
+  panel.classList.toggle('open');
+}
+
+// -------------------------------------------------------
+// INIT
+// -------------------------------------------------------
+document.addEventListener('DOMContentLoaded', function() {
+  renderSummary();
+  renderCards();
+  // Auto-select first micromarket
+  selectMM(0);
+});
+</script>
+</body>
+</html>

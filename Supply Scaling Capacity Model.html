@@ -1,0 +1,1896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Supply Scaling Capacity Model · Built by Archit Kannan</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300&display=swap');
+
+  :root {
+    --green: #04B565;
+    --green-dark: #038A4D;
+    --green-mid: #05D677;
+    --page-bg: #F2F5F9;
+    --panel-bg: #FFFFFF;
+    --panel-alt: #F8FAFB;
+    --header-bg: #0F2318;
+    --ink: #1A2E23;
+    --ink-2: #374B3E;
+    --muted: #6B8070;
+    --muted-light: #9DB5A5;
+    --wash: #E6F9F1;
+    --green-wash: #EAF7F2;
+    --warn: #D97706;
+    --warn-bg: #FFFBEB;
+    --danger: #DC2626;
+    --danger-bg: #FEF2F2;
+    --border: #E2E8E4;
+    --border-green: rgba(4, 181, 101, 0.2);
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: var(--page-bg);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* HEADER - keep dark for Pronto brand anchor */
+  .header {
+    background: var(--header-bg);
+    border-bottom: 3px solid var(--green);
+    padding: 28px 48px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+
+  .header-left {}
+
+  .appendix-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    color: var(--green);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .header h1 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: #FFFFFF;
+    letter-spacing: -0.02em;
+  }
+
+  .header-right {
+    text-align: right;
+  }
+
+  .header-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: rgba(255,255,255,0.45);
+    letter-spacing: 0.1em;
+  }
+
+  .header-meta span {
+    color: var(--green);
+  }
+
+  .header-subtitle {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.65;
+    max-width: 640px;
+    margin-top: 12px;
+    letter-spacing: 0;
+  }
+
+  .header-subtitle strong {
+    color: rgba(255,255,255,0.85);
+    font-weight: 600;
+  }
+
+  /* LAYOUT */
+  .main {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    min-height: calc(100vh - 89px);
+  }
+
+  /* INPUTS PANEL */
+  .inputs-panel {
+    background: var(--panel-bg);
+    border-right: 1px solid var(--border);
+    box-shadow: 2px 0 8px rgba(0,0,0,0.04);
+    padding: 32px 28px;
+    overflow-y: auto;
+  }
+
+  .panel-section {
+    margin-bottom: 36px;
+  }
+
+  .panel-section:last-child {
+    margin-bottom: 0;
+  }
+
+  .section-label {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    color: var(--ink);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid rgba(4,181,101,0.25);
+  }
+
+  .input-group {
+    margin-bottom: 22px;
+  }
+
+  .input-label {
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    font-weight: 400;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .input-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 22px;
+    color: var(--green-dark);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+
+  .input-note {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+    font-style: italic;
+    opacity: 0.7;
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 3px;
+    background: #D1E5DA;
+    border-radius: 2px;
+    outline: none;
+    margin-top: 10px;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--green);
+    cursor: pointer;
+    transition: transform 0.15s ease;
+  }
+
+  input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.3);
+  }
+
+  .locked-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    background: var(--green-wash);
+    color: var(--green-dark);
+    border: 1px solid rgba(4,181,101,0.2);
+    padding: 2px 6px;
+    border-radius: 2px;
+    letter-spacing: 0.1em;
+  }
+
+  /* SCENARIOS */
+  .scenarios {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .scenario-btn {
+    background: var(--panel-alt);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 14px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s ease;
+    width: 100%;
+  }
+
+  .scenario-btn.active {
+    background: var(--green-wash);
+    border-color: var(--green);
+  }
+
+  .scenario-btn:hover:not(.active) {
+    border-color: rgba(4, 181, 101, 0.4);
+  }
+
+  .scenario-name {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 2px;
+  }
+
+  .scenario-desc {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  .scenario-btn.active .scenario-name {
+    color: var(--green-dark);
+  }
+
+  /* OUTPUT PANEL */
+  .output-panel {
+    padding: 32px 40px;
+    overflow-y: auto;
+    background: var(--page-bg);
+  }
+
+  /* GAP HERO */
+  .gap-hero {
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-md);
+    border-radius: 12px;
+    padding: 36px 40px;
+    margin-bottom: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .gap-hero::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--green);
+  }
+
+  .gap-hero.critical::before { background: var(--danger); }
+  .gap-hero.warning::before { background: var(--warn); }
+  .gap-hero.feasible::before { background: var(--green); }
+
+  .gap-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .gap-number {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 74px;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    margin-bottom: 8px;
+    transition: color 0.3s ease;
+  }
+
+  .gap-number.critical { color: var(--danger); }
+  .gap-number.warning { color: var(--warn); }
+  .gap-number.feasible { color: var(--green); }
+
+  .gap-unit {
+    font-family: 'DM Mono', monospace;
+    font-size: 15px;
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+
+  .gap-verdict {
+    font-size: 16px;
+    color: var(--ink-2);
+    line-height: 1.6;
+    max-width: 520px;
+  }
+
+  .gap-verdict strong {
+    color: var(--green);
+  }
+
+  .gap-verdict.critical strong { color: var(--danger); }
+  .gap-verdict.warning strong { color: var(--warn); }
+
+  /* METRICS GRID */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .metric-card {
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    border-radius: 10px;
+    padding: 20px 22px;
+  }
+
+  .metric-card-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .metric-card-value {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 34px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+
+  .metric-card-sub {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  /* BREAKDOWN TABLE */
+  .breakdown {
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    border-radius: 10px;
+    padding: 28px 28px;
+    margin-bottom: 28px;
+  }
+
+  .breakdown-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .breakdown-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .breakdown-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    gap: 16px;
+  }
+
+  .breakdown-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .breakdown-row.total {
+    margin-top: 8px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    border-bottom: none;
+  }
+
+  .breakdown-item {
+    font-size: 14.5px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  .breakdown-item strong {
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .breakdown-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 15px;
+    color: var(--ink-2);
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .breakdown-num.highlight {
+    color: var(--green);
+    font-weight: 500;
+  }
+
+  .breakdown-num.danger { color: var(--danger); }
+  .breakdown-num.warn { color: var(--warn); }
+
+  /* PER CENTRE BOX */
+  .per-centre {
+    background: var(--green-wash);
+    border: 1px solid rgba(4, 181, 101, 0.25);
+    border-radius: 10px;
+    padding: 24px 28px;
+    margin-bottom: 28px;
+  }
+
+  .per-centre-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    color: var(--green-dark);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .per-centre-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  .pc-item {}
+
+  .pc-value {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--green);
+    letter-spacing: -0.03em;
+    margin-bottom: 4px;
+  }
+
+  .pc-label {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  .pc-formula {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted-light);
+    margin-top: 5px;
+    letter-spacing: 0.01em;
+  }
+
+  /* FOOTNOTE */
+  .footnote {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+    border-top: 1px solid var(--border);
+    padding-top: 20px;
+    font-style: italic;
+  }
+
+  .footnote a {
+    color: var(--green);
+    text-decoration: none;
+  }
+
+  /* DIVIDER */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 28px 0;
+  }
+
+  /* Animations */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .gap-number {
+    animation: fadeIn 0.3s ease;
+  }
+
+  /* CONTEXT STRIP */
+  .context-strip {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+    flex-wrap: wrap;
+  }
+
+  .context-item {
+    flex: 1;
+    min-width: 100px;
+  }
+
+  .context-item-gap .context-value { color: var(--danger); }
+  .context-item-capacity .context-value { color: var(--green-dark); }
+
+  .context-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .context-value {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+    line-height: 1;
+    margin-bottom: 3px;
+  }
+
+  .context-sub {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .context-arrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 15px;
+    color: var(--muted-light);
+    flex-shrink: 0;
+    padding: 0 4px;
+  }
+
+  /* LEVER SECTION */
+  .lever-section {
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px 24px 20px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+
+  .lever-header {
+    margin-bottom: 20px;
+  }
+
+  .lever-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 6px;
+  }
+
+  .lever-subtitle {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.5;
+    max-width: 560px;
+  }
+
+  .lever-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .lever-card {
+    border-radius: 8px;
+    padding: 14px 14px 12px;
+    border: 1px solid var(--border);
+    position: relative;
+    transition: border-color 0.2s;
+  }
+
+  .lever-card.best {
+    border-color: var(--green);
+    background: var(--green-wash);
+  }
+
+  .lever-card-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .lever-card.best .lever-card-label {
+    color: var(--green-dark);
+  }
+
+  .lever-card-gap {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin-bottom: 3px;
+  }
+
+  .lever-card-gap.red { color: var(--danger); }
+  .lever-card-gap.amber { color: var(--warn); }
+  .lever-card-gap.green-col { color: var(--green-dark); }
+
+  .lever-card-unit {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .lever-card-change {
+    font-size: 13px;
+    font-weight: 500;
+    padding: 3px 7px;
+    border-radius: 3px;
+    display: inline-block;
+  }
+
+  .lever-card-change.improvement {
+    background: rgba(4,181,101,0.12);
+    color: var(--green-dark);
+  }
+
+  .lever-card-change.neutral {
+    background: rgba(107,128,112,0.1);
+    color: var(--muted);
+  }
+
+  .best-badge {
+    position: absolute;
+    top: -1px; right: -1px;
+    background: var(--green);
+    color: white;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    padding: 3px 8px;
+    border-radius: 0 7px 0 6px;
+    text-transform: uppercase;
+  }
+
+  .lever-insight {
+    background: var(--green-wash);
+    border: 1px solid rgba(4,181,101,0.25);
+    border-radius: 7px;
+    padding: 14px 16px;
+    font-size: 15px;
+    color: var(--ink-2);
+    line-height: 1.6;
+  }
+
+  .lever-insight strong { color: var(--green-dark); }
+
+  /* GOVERNANCE SECTION */
+  .governance-section {
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px 24px 20px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+
+  .governance-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+
+  .governance-intro {
+    font-size: 14.5px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 22px;
+    max-width: 620px;
+  }
+
+  /* SEQUENCE LAYOUT */
+  .gov-sequence {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .gov-seq-item {
+    border-radius: 8px;
+    padding: 16px 18px;
+    border: 1px solid var(--border);
+  }
+
+  .gov-seq-first {
+    border-left: 4px solid var(--green);
+    background: var(--green-wash);
+  }
+
+  .gov-seq-stress {
+    border-left: 4px solid #8B5CF6;
+    background: rgba(139, 92, 246, 0.04);
+  }
+
+  .gov-seq-last {
+    border-left: 4px solid var(--warn);
+    background: var(--warn-bg);
+  }
+
+  .gov-seq-step {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-weight: 500;
+    margin-bottom: 12px;
+  }
+
+  .gov-seq-first .gov-seq-step { color: var(--green-dark); }
+  .gov-seq-stress .gov-seq-step { color: #7C3AED; }
+  .gov-seq-last .gov-seq-step { color: var(--warn); }
+
+  .gov-seq-levers {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 12px;
+  }
+
+  .gov-seq-card {
+    background: rgba(255,255,255,0.7);
+    border: 1px solid rgba(0,0,0,0.06);
+    border-radius: 6px;
+    padding: 14px 16px;
+  }
+
+  .gov-seq-action {
+    font-size: 13.5px;
+    color: var(--ink-2);
+    line-height: 1.55;
+    margin-bottom: 8px;
+    padding: 8px 10px;
+    background: rgba(4,181,101,0.07);
+    border-radius: 4px;
+    border-left: 2px solid var(--green);
+    font-style: italic;
+  }
+
+  .gov-seq-stress .gov-seq-action {
+    background: rgba(139, 92, 246, 0.06);
+    border-left-color: #8B5CF6;
+  }
+
+  .gov-seq-last .gov-seq-action {
+    background: rgba(217,119,6,0.06);
+    border-left-color: var(--warn);
+  }
+
+  .governance-note {
+    font-size: 14.5px;
+    color: var(--ink-2);
+    line-height: 1.65;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+
+  .gov-card-lever {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--green-dark);
+    margin-bottom: 7px;
+  }
+
+  .gov-seq-stress .gov-card-lever { color: #7C3AED; }
+  .gov-seq-last .gov-card-lever { color: var(--warn); }
+
+  .gov-card-q {
+    font-size: 14.5px;
+    color: var(--ink-2);
+    line-height: 1.55;
+    margin-bottom: 10px;
+    font-weight: 500;
+  }
+
+  .gov-card-type {
+    font-size: 12.5px;
+    color: var(--muted);
+    font-style: italic;
+    line-height: 1.5;
+    margin-top: 6px;
+  }
+
+  /* SCENARIOS CARD in output panel */
+  .scenarios-card {
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 22px 24px 20px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+
+  .scenarios-card-header {
+    margin-bottom: 16px;
+  }
+
+  .scenarios-card-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 5px;
+  }
+
+  .scenarios-card-subtitle {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.5;
+    max-width: 600px;
+  }
+
+  .scenarios-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+
+  /* DATA AGE CHIP */
+  .data-age-chip {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(217, 119, 6, 0.08);
+    border: 1px solid rgba(217, 119, 6, 0.3);
+    border-radius: 4px;
+    padding: 5px 10px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11.5px;
+    color: var(--warn);
+    letter-spacing: 0.03em;
+    margin-bottom: 18px;
+    line-height: 1.4;
+  }
+
+  /* RESET BUTTON */
+  .reset-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    background: none;
+    border: 1px solid var(--border-green);
+    color: var(--green-dark);
+    padding: 3px 9px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .reset-btn:hover {
+    background: var(--green-wash);
+    border-color: var(--green);
+  }
+
+  /* RAMP SUB-BREAKDOWN */
+  .ramp-block-header {
+    border-bottom: none !important;
+    padding-bottom: 4px !important;
+  }
+
+  .ramp-sub {
+    background: rgba(217, 119, 6, 0.03);
+    border-bottom: 1px solid rgba(217, 119, 6, 0.12) !important;
+    padding-left: 20px !important;
+  }
+
+  .ramp-sub:first-of-type {
+    border-top: 1px dashed rgba(217, 119, 6, 0.25);
+  }
+
+  .ramp-sub-total {
+    background: rgba(217, 119, 6, 0.07) !important;
+    border-bottom: 1px solid rgba(217, 119, 6, 0.2) !important;
+  }
+
+  .ramp-sub-item {
+    font-size: 13px;
+    color: var(--muted) !important;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .ramp-sub-total .ramp-sub-item {
+    color: var(--ink-2) !important;
+    font-weight: 500;
+  }
+
+  .ramp-formula {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted-light);
+    letter-spacing: 0.01em;
+  }
+
+  .ramp-sub-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--warn) !important;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  /* BREAKDOWN INNER */
+  .breakdown-inner {
+    margin-bottom: 8px;
+  }
+
+  /* RAMP CALLOUT */
+  .ramp-callout {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    background: var(--warn-bg);
+    border: 1px solid rgba(217, 119, 6, 0.3);
+    border-left: 4px solid var(--warn);
+    border-radius: 8px;
+    padding: 18px 20px;
+    margin-bottom: 20px;
+  }
+
+  .ramp-callout-icon {
+    font-size: 18px;
+    color: var(--warn);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .ramp-callout-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--warn);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .ramp-callout-text {
+    font-size: 14.5px;
+    color: #92400E;
+    line-height: 1.6;
+  }
+
+  .ramp-callout-text strong {
+    color: #78350F;
+    font-weight: 600;
+  }
+
+  /* ACCORDION */
+  .accordion-wrap {
+    margin-top: 8px;
+  }
+
+  .accordion-item {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+
+  .accordion-trigger {
+    width: 100%;
+    background: var(--panel-bg);
+    border: none;
+    border-bottom: 1px solid transparent;
+    padding: 16px 22px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.2s ease;
+  }
+
+  .accordion-trigger:hover {
+    background: #F4FCF8;
+  }
+
+  .accordion-item.open .accordion-trigger {
+    background: var(--green-wash);
+    border-bottom: 1px solid rgba(4,181,101,0.2);
+  }
+
+  .acc-icon {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--green);
+    min-width: 18px;
+  }
+
+  .acc-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink-2);
+    flex: 1;
+  }
+
+  .acc-chevron {
+    font-size: 14px;
+    color: var(--muted);
+    transition: transform 0.25s ease;
+    display: inline-block;
+  }
+
+  .accordion-item.open .acc-chevron {
+    transform: rotate(180deg);
+    color: var(--green);
+  }
+
+  .accordion-body {
+    display: none;
+    padding: 24px 22px;
+    background: #FAFCFB;
+    border-top: 1px solid var(--border);
+  }
+
+  .accordion-item.open .accordion-body {
+    display: block;
+    animation: fadeIn 0.2s ease;
+  }
+
+  /* HOW TO USE */
+  .acc-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .acc-step {
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    gap: 14px;
+    align-items: start;
+  }
+
+  .acc-step-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--green);
+    text-transform: uppercase;
+    padding-top: 2px;
+  }
+
+  .acc-step-text {
+    font-size: 14.5px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .acc-step-text strong {
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  /* ASSUMPTIONS & LIMITATIONS */
+  .assumptions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .assumption-row {
+    display: grid;
+    grid-template-columns: 72px 1fr;
+    gap: 14px;
+    align-items: start;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .assumption-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .assumption-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 7px;
+    border-radius: 3px;
+    text-align: center;
+    margin-top: 2px;
+  }
+
+  .assumption-tag.locked {
+    background: rgba(4, 181, 101, 0.12);
+    color: var(--green);
+  }
+
+  .assumption-tag.assumed {
+    background: rgba(245, 158, 11, 0.12);
+    color: var(--warn);
+  }
+
+  .assumption-tag.limit {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+  }
+
+  .assumption-text {
+    font-size: 14.5px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .assumption-text strong {
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  /* Responsive tweaks */
+  @media (max-width: 900px) {
+    .main { grid-template-columns: 1fr; }
+    .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+    .per-centre-grid { grid-template-columns: repeat(2, 1fr); }
+    .header { padding: 20px 24px; }
+    .inputs-panel { padding: 24px 20px; }
+    .output-panel { padding: 24px 20px; }
+    .scenarios-grid { grid-template-columns: repeat(2, 1fr); }
+    .lever-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="appendix-tag">Built by Archit Kannan</div>
+    <h1>Supply Scaling Capacity Model</h1>
+    <div class="header-subtitle">Pronto has committed to 70,000 bookings per day. That requires roughly 10,000 active professionals at full productivity. At 6,500 professionals today, the gap is real and the timeline is tight. This model maps what the training infrastructure needs to produce, and which levers Pronto controls to close it.</div>
+  </div>
+  <div class="header-right">
+    <div class="header-meta">All inputs from <span>verified public sources</span></div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- INPUTS PANEL -->
+  <div class="inputs-panel">
+
+    <div class="panel-section">
+      <div class="section-label" style="display:flex;justify-content:space-between;align-items:center">
+        <span>Demand Side</span>
+        <button class="reset-btn" onclick="resetDefaults()" title="Reset to Feb 2026 verified figures">↺ Reset</button>
+      </div>
+      <div class="data-age-chip">May 2026 baseline · update with current figures for a precise output</div>
+
+      <div class="input-group">
+        <div class="input-label">
+          Current professionals
+          <span class="input-value" id="disp-current">6,500</span>
+        </div>
+        <input type="range" id="sl-current" min="1000" max="20000" value="6500" step="100" oninput="update()">
+
+        <div class="input-note">Last verified: 6,500 · Moneycontrol, May 2026 · update with today's figure</div>
+      </div>
+
+      <div class="input-group">
+        <div class="input-label">
+          Monthly retention rate
+          <span class="input-value" id="disp-retention">70%</span>
+        </div>
+        <input type="range" id="sl-retention" min="40" max="99" value="70" step="1" oninput="update()">
+
+        <div class="input-note">Last verified: 70% · CEO podcast, Apr 2026</div>
+      </div>
+
+      <div class="input-group">
+        <div class="input-label">
+          Bookings/professional/day
+          <span class="input-value" id="disp-bpd">7</span>
+        </div>
+        <input type="range" id="sl-bpd" min="3" max="15" value="7" step="1" oninput="update()">
+
+        <div class="input-note">Last verified: 7 · Moneycontrol, Mar 2026 · active micromarkets only</div>
+      </div>
+
+      <div class="input-group">
+        <div class="input-label">
+          Target bookings/day
+          <span class="input-value" id="disp-target">70,000</span>
+        </div>
+        <input type="range" id="sl-target" min="20000" max="200000" value="70000" step="1000" oninput="update()">
+
+        <div class="input-note">Last verified: 70,000 · TechCrunch, Mar 2026 · adjust if target has moved</div>
+      </div>
+
+      <div class="input-group">
+        <div class="input-label">
+          Planning window
+          <span class="input-value" id="disp-months">3</span>
+        </div>
+        <input type="range" id="sl-months" min="1" max="18" value="3" step="1" oninput="update()">
+
+        <div class="input-note">How many months to model · the original June 2026 target implied 3 months from Feb 2026 · set this to your actual remaining window</div>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="section-label">Supply Side</div>
+
+      <div class="input-group">
+        <div class="input-label">
+          Active Pronto Centres
+          <span class="input-value" id="disp-centres">12</span>
+        </div>
+        <input type="range" id="sl-centres" min="12" max="30" value="12" step="1" oninput="update()">
+
+        <div class="input-note">Currently 12 confirmed · toggle to model expansion</div>
+      </div>
+
+      <div class="input-group">
+        <div class="input-label">
+          Average cohort size per centre
+          <span class="input-value" id="disp-cohort">20</span>
+        </div>
+        <input type="range" id="sl-cohort" min="5" max="80" value="20" step="5" oninput="update()">
+
+        <div class="input-note">A cohort is the batch of professionals trained together in a single training run, not the total headcount at a centre. One centre trains multiple cohorts per month. Enter Pronto's actual batch size here.</div>
+      </div>
+
+      <div class="input-group">
+        <div class="input-label">
+          Training cycles/centre/month
+          <span class="input-value" id="disp-cycles">4</span>
+        </div>
+        <input type="range" id="sl-cycles" min="1" max="7" value="4" step="1" oninput="update()">
+
+        <div class="input-note">4-day training → max ~7 Training cycles/month if continuous</div>
+      </div>
+
+      <div class="input-group">
+        <div class="input-label">
+          Pass rate through training
+          <span class="input-value" id="disp-pass">90%</span>
+        </div>
+        <input type="range" id="sl-pass" min="40" max="100" value="90" step="5" oninput="update()">
+
+        <div class="input-note">Proportion activated after training · internal figure</div>
+      </div>
+
+      <div class="input-group">
+        <div class="input-label">
+          Ramp-up period
+          <span class="input-value" id="disp-ramp-weeks">3 weeks</span>
+        </div>
+        <input type="range" id="sl-ramp-weeks" min="1" max="8" value="3" step="1" oninput="update()">
+
+        <div class="input-note">Weeks before a new professional reaches full productivity · unknown externally</div>
+      </div>
+
+      <div class="input-group">
+        <div class="input-label">
+          Productivity during ramp
+          <span class="input-value" id="disp-ramp-rate">40%</span>
+        </div>
+        <input type="range" id="sl-ramp-rate" min="20" max="80" value="40" step="5" oninput="update()">
+
+        <div class="input-note">Avg bookings/day during ramp as % of 7-booking benchmark · likely 2-3 bookings/day initially</div>
+      </div>
+    </div>
+
+
+  </div>
+
+  <!-- OUTPUT PANEL -->
+  <div class="output-panel">
+
+    <!-- ACCORDION: HOW TO USE / ASSUMPTIONS / LIMITATIONS: front-loaded -->
+    <div class="accordion-wrap" style="margin-bottom: 24px;">
+
+      <div class="accordion-item" id="acc-howto">
+        <button class="accordion-trigger" onclick="toggleAcc('howto')">
+          <span class="acc-title">How to use this model</span>
+          <span class="acc-chevron" id="chev-howto">↓</span>
+        </button>
+        <div class="accordion-body" id="body-howto">
+          <div class="acc-grid">
+            <div class="acc-step">
+              <div class="acc-step-num">Step 1</div>
+              <div class="acc-step-text"><strong>Read the demand side first.</strong> The left panel shows the numbers locked in by verified public statements: current professionals, retention rate, productivity benchmark, and the June 2026 target. These are the inputs the model is built around. The gap the model surfaces is a function of these inputs.</div>
+            </div>
+            <div class="acc-step">
+              <div class="acc-step-num">Step 2</div>
+              <div class="acc-step-text"><strong>Enter Pronto's actual supply-side figures.</strong> The four sliders: number of active centres, cohort size per centre, training cycles per month, and pass rate: are the variables Pronto controls. The default values are working assumptions only. Replacing them with real internal figures produces a precise output rather than an illustrative one.</div>
+            </div>
+            <div class="acc-step">
+              <div class="acc-step-num">Step 3</div>
+              <div class="acc-step-text"><strong>Read the gap number and its colour.</strong> Red means the gap cannot close without a structural intervention: scaling one lever alone will not be sufficient. Amber means the gap is partially closeable with targeted adjustments to one or two levers. Green means the current or modelled scenario covers the requirement.</div>
+            </div>
+            <div class="acc-step">
+              <div class="acc-step-num">Step 4</div>
+              <div class="acc-step-text"><strong>Test the four scenarios.</strong> Each scenario isolates one lever: larger cohorts, more frequent training cycles, or additional centres: while holding the others at baseline. This shows which lever has the highest marginal impact on closing the gap. The per-centre section translates the system-level gap into what it requires from each individual centre.</div>
+            </div>
+            <div class="acc-step">
+              <div class="acc-step-num">Step 5</div>
+              <div class="acc-step-text"><strong>Use the breakdown table to audit the arithmetic.</strong> Every calculation step is shown explicitly: target professionals, net new needed, monthly replacement, monthly growth required, total throughput required, capacity, and gap. Nothing is hidden inside a formula.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion-item" id="acc-assumptions">
+        <button class="accordion-trigger" onclick="toggleAcc('assumptions')">
+          <span class="acc-title">Assumptions</span>
+          <span class="acc-chevron" id="chev-assumptions">↓</span>
+        </button>
+        <div class="accordion-body" id="body-assumptions">
+          <div class="assumptions-list">
+            <div class="assumption-row">
+              <div class="assumption-tag locked">Verified</div>
+              <div class="assumption-text"><strong>6,500 active professionals</strong> is the May 2026 verified figure (Moneycontrol). This is now an adjustable input: update it with Pronto's current headcount for a more accurate output. Any increase above 6,500 reduces the net new requirement.</div>
+            </div>
+            <div class="assumption-row">
+              <div class="assumption-tag locked">Verified</div>
+              <div class="assumption-text"><strong>70% monthly retention</strong> is the figure from the April 2026 podcast. This is now an adjustable input. The model recalculates monthly replacement whenever this changes: lower retention raises the replacement burden significantly.</div>
+            </div>
+            <div class="assumption-row">
+              <div class="assumption-tag locked">Verified</div>
+              <div class="assumption-text"><strong>7 bookings/professional/day</strong> is the active micromarket productivity benchmark from Moneycontrol March 2026. The model uses this as the productivity standard for all 10,000 target professionals. If new professionals take time to reach this rate, the actual professional requirement is higher.</div>
+            </div>
+            <div class="assumption-row">
+              <div class="assumption-tag locked">Verified</div>
+              <div class="assumption-text"><strong>70,000 bookings/day by June 2026</strong> is the target stated in TechCrunch March 2026.</div>
+            </div>
+            <div class="assumption-row">
+              <div class="assumption-tag assumed">Assumed</div>
+              <div class="assumption-text"><strong>All 12 centres are treated as equivalent.</strong> The model divides the system-level requirement equally across all centres. In reality, centres likely differ in physical capacity, catchment population, and operational maturity. A city-level breakdown would require internal data.</div>
+            </div>
+            <div class="assumption-row">
+              <div class="assumption-tag assumed">Assumed</div>
+              <div class="assumption-text"><strong>Training cycles run continuously.</strong> The model assumes each centre can run cycles back-to-back without operational gaps between cohorts. Scheduling constraints, trainer availability, and facility capacity may reduce the practical maximum below the theoretical 7 training cycles per month.</div>
+            </div>
+            <div class="assumption-row">
+              <div class="assumption-tag assumed">Assumed</div>
+              <div class="assumption-text"><strong>The ramp penalty applies to net-new (growth) professionals only, not replacements.</strong> Replacement professionals have prior experience in the role; their ramp profile is genuinely unknown but is assumed to be faster than a first-time hire. Applying the penalty only to the growth cohort produces a conservative lower bound on the adjustment. If replacements also ramp slowly, the true adjusted requirement is higher. The default ramp assumption (3 weeks, 40% productivity: approximately 2-3 bookings/day) is a working estimate. Pronto's internal data on new-professional booking ramp curves should replace these defaults.</div>
+            </div>
+            <div class="assumption-row">
+              <div class="assumption-tag assumed">Assumed</div>
+              <div class="assumption-text"><strong>The B2B supply channel is excluded.</strong> Pronto's agency-placed professional channel (announced April 2026) adds a parallel supply stream not modelled here. If agency placements contribute meaningfully to headcount, the gap narrows: but B2B candidates introduce a two-layer accountability structure that the quality gate must accommodate separately.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion-item" id="acc-limitations">
+        <button class="accordion-trigger" onclick="toggleAcc('limitations')">
+          <span class="acc-title">Limitations</span>
+          <span class="acc-chevron" id="chev-limitations">↓</span>
+        </button>
+        <div class="accordion-body" id="body-limitations">
+          <div class="assumptions-list">
+            <div class="assumption-row">
+              <div class="assumption-tag limit">Scope</div>
+              <div class="assumption-text"><strong>The ramp adjustment is a simplification.</strong> The model treats all new professionals as ramping identically: same duration, same productivity curve. In reality, ramp speed likely varies by prior experience, micromarket density, and hub manager quality. A cohort-level ramp model would require internal booking data by professional tenure. The adjustment shown here understates variance: the real range is wider than a single slider implies.</div>
+            </div>
+            <div class="assumption-row">
+              <div class="assumption-tag limit">Scope</div>
+              <div class="assumption-text"><strong>This model measures throughput, not quality.</strong> It counts the number of professionals who can be trained and activated: not whether they meet Pronto's quality standard. A higher pass rate assumption does not mean quality is maintained; it means the model assumes quality is maintained. The screening rubric and training standardisation questions sit outside this model.</div>
+            </div>
+            <div class="assumption-row">
+              <div class="assumption-tag limit">Scope</div>
+              <div class="assumption-text"><strong>Demand growth is treated as linear.</strong> The 70K/day target is modelled as a uniform ramp from 20K today. Actual demand may grow non-linearly: faster in existing dense markets, slower in new cities: which would change the micromarket-level supply requirement even if the system-level total is correct.</div>
+            </div>
+            <div class="assumption-row">
+              <div class="assumption-tag limit">Scope</div>
+              <div class="assumption-text"><strong>Retention is modelled as constant.</strong> The 30% monthly churn rate is applied uniformly across the full professional base. In practice, churn is likely higher among recently trained professionals and lower among tenured ones. A cohort-based retention model would produce a more precise replacement requirement but requires internal data.</div>
+            </div>
+            <div class="assumption-row">
+              <div class="assumption-tag limit">Data</div>
+              <div class="assumption-text"><strong>Three supply-side inputs are unknown from outside.</strong> Cohort size per centre, training cycles per month, and pass rate are Pronto's internal figures. The model's gap output is only as accurate as those inputs. The defaults used here are: <strong>20 professionals per cohort</strong> (a mid-range estimate for a centre with one or two training rooms), and a <strong>90% pass rate</strong> (the minimum consistent with the stated quality standard: if quality is the gate, fewer than 1 in 10 candidates should fail screening, not 1 in 4). These are working illustrations, not estimates of Pronto's actual state. Replace them with internal figures for a precise output.</div>
+            </div>
+            <div class="assumption-row">
+              <div class="assumption-tag limit">Data</div>
+              <div class="assumption-text"><strong>The 3-month window may already be shorter.</strong> The Feb 2026 baseline and June 2026 target imply a 4-month window: but professional activation, market seeding, and demand development all require lead time within that window. The effective training window available may be 10-12 weeks, not 16.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end front-loaded accordion -->
+
+    <!-- SECTION 1: CONTEXT STRIP -->
+    <div class="context-strip">
+      <div class="context-item">
+        <div class="context-label">Currently have</div>
+        <div class="context-value" id="ctx-current">-</div>
+        <div class="context-sub">professionals</div>
+      </div>
+      <div class="context-arrow">→</div>
+      <div class="context-item">
+        <div class="context-label">Target is</div>
+        <div class="context-value" id="m-needed">-</div>
+        <div class="context-sub" id="m-needed-sub">professionals</div>
+      </div>
+      <div class="context-arrow">→</div>
+      <div class="context-item context-item-gap">
+        <div class="context-label">We need</div>
+        <div class="context-value" id="m-required">-</div>
+        <div class="context-sub">professionals trained/month</div>
+      </div>
+      <div class="context-arrow">vs</div>
+      <div class="context-item context-item-capacity">
+        <div class="context-label">Current throughput of</div>
+        <div class="context-value" id="m-capacity">-</div>
+        <div class="context-sub">professionals trained/month</div>
+      </div>
+    </div>
+
+    <!-- RAMP CALLOUT -->
+    <div class="ramp-callout" id="ramp-callout">
+      <div class="ramp-callout-icon">⚠</div>
+      <div class="ramp-callout-body">
+        <div class="ramp-callout-title">New professionals do not arrive at full productivity on day one</div>
+        <div class="ramp-callout-text" id="ramp-callout-text"></div>
+      </div>
+    </div>
+
+    <!-- SCENARIOS CARD: above lever comparison -->
+    <div class="scenarios-card">
+      <div class="scenarios-card-header">
+        <div class="scenarios-card-title">Test a scenario</div>
+        <div class="scenarios-card-subtitle">Each preset isolates one operational lever. Select one to load it into the model, then read the gap comparison below to see how much it helps.</div>
+      </div>
+      <div class="scenarios-grid">
+        <button class="scenario-btn active" onclick="setScenario(0)">
+          <div class="scenario-name">01 · Current trajectory</div>
+          <div class="scenario-desc">12 centres · 20/cohort · 4 cycles · 90% pass</div>
+        </button>
+        <button class="scenario-btn" onclick="setScenario(1)">
+          <div class="scenario-name">02 · Larger cohorts</div>
+          <div class="scenario-desc">12 centres · 40/cohort · 4 cycles · 90% pass</div>
+        </button>
+        <button class="scenario-btn" onclick="setScenario(2)">
+          <div class="scenario-name">03 · Higher frequency</div>
+          <div class="scenario-desc">12 centres · 20/cohort · 6 cycles · 90% pass</div>
+        </button>
+        <button class="scenario-btn" onclick="setScenario(3)">
+          <div class="scenario-name">04 · Centre expansion</div>
+          <div class="scenario-desc">20 centres · 20/cohort · 4 cycles · 90% pass</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- SECTION 2: LEVER COMPARISON - THE MAIN INSIGHT -->
+    <div class="lever-section">
+      <div class="lever-header">
+        <div class="lever-title">Which lever closes the gap fastest?</div>
+        <div class="lever-subtitle">Each scenario isolates one operational decision. The gap remaining after each intervention is shown below. All other inputs held at your current slider settings.</div>
+      </div>
+
+      <div class="lever-grid" id="lever-grid">
+        <!-- Populated by JS -->
+      </div>
+
+      <div class="lever-insight" id="lever-insight">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <!-- SECTION 3: GOVERNANCE DECISION -->
+    <div class="governance-section">
+      <div class="governance-title">What this model is asking you to decide</div>
+      <div class="governance-intro">Four levers determine whether the gap closes.<br> <br>They are not equal: they differ in how fast they can be pulled, how much they cost, and how certain the outcome is. Work through them in this order.</div>
+
+      <div class="gov-sequence">
+
+        <div class="gov-seq-item gov-seq-first">
+          <div class="gov-seq-step">Pull first</div>
+          <div class="gov-seq-levers">
+            <div class="gov-seq-card">
+              <div class="gov-card-lever">Lever A · Cohort size</div>
+              <div class="gov-card-q">How many professionals can each centre train per cycle without the screening standard slipping?</div>
+              <div class="gov-seq-action">Simulate it: drag the Cohort size slider up. Watch how much gap it closes before quality becomes the constraint.</div>
+              <div class="gov-card-type">No capital required · policy decision · can be implemented in days</div>
+            </div>
+            <div class="gov-seq-card">
+              <div class="gov-card-lever">Lever B · Training cycle frequency</div>
+              <div class="gov-card-q">How many training cycles can each centre run per month given trainer hours and facility capacity?</div>
+              <div class="gov-seq-action">Simulate it: drag the Training cycles slider up. The ceiling is 7 cycles/month if training runs continuously: test where the real ceiling is.</div>
+              <div class="gov-card-type">Operational decision · trainer availability is the constraint · faster to implement than new centres</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="gov-seq-item gov-seq-stress">
+          <div class="gov-seq-step">Stress-test this</div>
+          <div class="gov-seq-levers">
+            <div class="gov-seq-card">
+              <div class="gov-card-lever">Lever D · Ramp speed</div>
+              <div class="gov-card-q">Can structured early coaching compress the time a new professional takes to reach 7 bookings/day?</div>
+              <div class="gov-seq-action">Simulate it: drag the Productivity during ramp slider up. This is the highest-uncertainty lever: but if ramp speed can be halved, it has a larger effect on the gap than any single supply lever.</div>
+              <div class="gov-card-type">Programme design decision · highest uncertainty · highest upside if solved · internal data required to validate</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="gov-seq-item gov-seq-last">
+          <div class="gov-seq-step">Pull last</div>
+          <div class="gov-seq-levers">
+            <div class="gov-seq-card">
+              <div class="gov-card-lever">Lever C · Centre count</div>
+              <div class="gov-card-q">How many new centres can be operationally ready within the planning window?</div>
+              <div class="gov-seq-action">Simulate it: drag the Active centres slider up. Each new centre adds the same throughput as your current cohort and training cycle settings: only pull this lever after A and B are fully explored.</div>
+              <div class="gov-card-type">Capital decision · longest lead time · highest cost · not the first lever to pull</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="governance-note">
+        The model is designed to be used in this sequence:<br> <br> 
+	<ul>
+	<li><strong>Levers A and B</strong> are governance calls that require no new budget and can be decided in a room.</li> 
+	<li><strong>Lever D</strong> requires Pronto's internal ramp data to validate: the slider is a sensitivity test, not a recommendation.</li> 
+	<li><strong>Lever C</strong> is the last resort, not the first response.</li>
+	</ul>
+      </div>
+    </div>
+
+    <!-- SECTION 4: ARITHMETIC - COLLAPSED BY DEFAULT -->
+    <div class="accordion-wrap" style="margin-top:0">
+      <div class="accordion-item" id="acc-breakdown">
+        <button class="accordion-trigger" onclick="toggleAcc('breakdown')">
+          <span class="acc-icon">↓</span>
+          <span class="acc-title">Full arithmetic - how every number is built</span>
+          <span class="acc-chevron" id="chev-breakdown">↓</span>
+        </button>
+        <div class="accordion-body" id="body-breakdown">
+          <div class="breakdown-inner">
+            <div class="breakdown-row">
+              <div class="breakdown-item"><strong>Target professionals</strong> <br>[ Bookings target ÷ Bookings per professional per day ]</div>
+              <div class="breakdown-num highlight" id="b-target-profs">-</div>
+            </div>
+            <div class="breakdown-row">
+              <div class="breakdown-item"><strong>Net new needed</strong> <br>[ Target professionals − Current professionals ]</div>
+              <div class="breakdown-num" id="b-net-new">-</div>
+            </div>
+            <div class="breakdown-row">
+              <div class="breakdown-item"><strong>Monthly replacement</strong> <br>[ Current professionals × Monthly churn rate ]</div>
+              <div class="breakdown-num" id="b-replacement">-</div>
+            </div>
+            <div class="breakdown-row">
+              <div class="breakdown-item"><strong>Monthly growth needed</strong> <br>[ Net new needed ÷ Months to target ]</div>
+              <div class="breakdown-num" id="b-growth">-</div>
+            </div>
+            <div class="breakdown-row total">
+              <div class="breakdown-item"><strong>Unadjusted professionals required per month</strong> [ Monthly replacement + Monthly growth needed ]</div>
+              <div class="breakdown-num highlight" id="b-total-req">-</div>
+            </div>
+            <div class="breakdown-row ramp-block-header">
+              <div class="breakdown-item"><strong>Onboarding ramp adjustment</strong> <br>Newly trained professionals do not begin at full productivity. The adjustment below estimates how many additional professionals are needed to cover the output shortfall during the ramp-in period. Applied to the growth cohort only, not replacements.</div>
+              <div class="breakdown-num warn" id="b-ramp-adj">-</div>
+            </div>
+            <div class="breakdown-row ramp-sub">
+              <div class="breakdown-item ramp-sub-item">Ramp fraction &nbsp;<span class="ramp-formula">[ Ramp weeks ÷ 4.33 weeks/month ]</span></div>
+              <div class="breakdown-num ramp-sub-num" id="b-ramp-fraction">-</div>
+            </div>
+            <div class="breakdown-row ramp-sub">
+              <div class="breakdown-item ramp-sub-item">Productivity shortfall during ramp &nbsp;<span class="ramp-formula">[ 1 − Productivity during ramp ]</span></div>
+              <div class="breakdown-num ramp-sub-num" id="b-ramp-shortfall">-</div>
+            </div>
+            <div class="breakdown-row ramp-sub">
+              <div class="breakdown-item ramp-sub-item">Growth cohort (penalty applied to this only) &nbsp;<span class="ramp-formula">[ Monthly growth needed ]</span></div>
+              <div class="breakdown-num ramp-sub-num" id="b-ramp-cohort">-</div>
+            </div>
+            <div class="breakdown-row ramp-sub ramp-sub-total">
+              <div class="breakdown-item ramp-sub-item"><strong>Ramp adjustment</strong> &nbsp;<span class="ramp-formula">[ Growth cohort × Ramp fraction × Productivity shortfall ]</span></div>
+              <div class="breakdown-num warn" id="b-ramp-adj-check">-</div>
+            </div>
+            <div class="breakdown-row total">
+              <div class="breakdown-item"><strong>Adjusted professionals required per month</strong> <br>[ Unadjusted professionals required per month + Ramp adjustment ]</div>
+              <div class="breakdown-num highlight" id="b-adj-req">-</div>
+            </div>
+            <div class="breakdown-row">
+              <div class="breakdown-item"><strong>Current training capacity</strong> <br>[ Centres × Average cohort size × Training cycles/month × Pass rate ]</div>
+              <div class="breakdown-num" id="b-capacity">-</div>
+            </div>
+            <div class="breakdown-row total">
+              <div class="breakdown-item"><strong>Monthly gap</strong> <br>[ Adjusted professionals required per month − Current training capacity ]</div>
+              <div class="breakdown-num danger" id="b-gap">-</div>
+            </div>
+          </div>
+          <div class="per-centre" style="margin-top:20px; margin-bottom:0">
+            <div class="per-centre-title">What the adjusted requirement means per Pronto Centre</div>
+            <div class="per-centre-grid">
+              <div class="pc-item">
+                <div class="pc-value" id="pc-needed">-</div>
+                <div class="pc-label">professionals needed per centre per month</div>
+		<div class="pc-formula">[ Adjusted professionals required per month ÷ Active centres ]</div>
+              </div>
+              <div class="pc-item">
+                <div class="pc-value" id="pc-cohort">-</div>
+                <div class="pc-label">implied cohort size at current training cycle frequency</div>
+		<div class="pc-formula">[ Professionals needed per centre per month ÷ Average training cycles per month ]</div>
+              </div>
+              <div class="pc-item">
+                <div class="pc-value" id="pc-cycles">-</div>
+                <div class="pc-label">implied training cycles/month at current cohort size</div>
+		<div class="pc-formula">[ Professionals needed per centre per month ÷ Average cohort size ]</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+  </div>
+</div>
+
+<script>
+  const SCENARIOS = [
+    { centres: 12, cohort: 20, cycles: 4, pass: 90 },
+    { centres: 12, cohort: 40, cycles: 4, pass: 90 },
+    { centres: 12, cohort: 20, cycles: 6, pass: 90 },
+    { centres: 20, cohort: 20, cycles: 4, pass: 90 },
+  ];
+
+  let activeScenario = 0;
+
+  function fmt(n) {
+    return Math.round(n).toLocaleString('en-IN');
+  }
+
+  function setScenario(i) {
+    activeScenario = i;
+    const s = SCENARIOS[i];
+    document.getElementById('sl-centres').value = s.centres;
+    document.getElementById('sl-cohort').value = s.cohort;
+    document.getElementById('sl-cycles').value = s.cycles;
+    document.getElementById('sl-pass').value = s.pass;
+    document.querySelectorAll('.scenario-btn').forEach((b, j) => {
+      b.classList.toggle('active', j === i);
+    });
+    update();
+  }
+
+  function update() {
+    // Read inputs
+    const centres    = parseInt(document.getElementById('sl-centres').value);
+    const cohort     = parseInt(document.getElementById('sl-cohort').value);
+    const cycles     = parseInt(document.getElementById('sl-cycles').value);
+    const pass       = parseInt(document.getElementById('sl-pass').value) / 100;
+    const rampWeeks  = parseInt(document.getElementById('sl-ramp-weeks').value);
+    const rampRate   = parseInt(document.getElementById('sl-ramp-rate').value) / 100;
+
+    // Update display labels
+    document.getElementById('disp-centres').textContent    = centres;
+    document.getElementById('disp-cohort').textContent     = cohort;
+    document.getElementById('disp-cycles').textContent     = cycles;
+    document.getElementById('disp-pass').textContent       = Math.round(pass * 100) + '%';
+    document.getElementById('disp-ramp-weeks').textContent = rampWeeks + (rampWeeks === 1 ? ' week' : ' weeks');
+    document.getElementById('disp-ramp-rate').textContent  = Math.round(rampRate * 100) + '%';
+
+    // DEMAND SIDE - now adjustable
+    const current    = parseInt(document.getElementById('sl-current').value);
+    const retention  = parseInt(document.getElementById('sl-retention').value) / 100;
+    const bpd        = parseInt(document.getElementById('sl-bpd').value);
+    const target_bpd = parseInt(document.getElementById('sl-target').value);
+    const months     = parseInt(document.getElementById('sl-months').value);
+    const weeksPerMonth = 4.33;
+
+    // Update demand display labels
+    document.getElementById('disp-current').textContent   = current.toLocaleString('en-IN');
+    document.getElementById('disp-retention').textContent = Math.round(retention * 100) + '%';
+    document.getElementById('disp-bpd').textContent       = bpd;
+    document.getElementById('disp-target').textContent    = target_bpd.toLocaleString('en-IN');
+    document.getElementById('disp-months').textContent    = months + (months === 1 ? ' month' : ' months');
+
+    const targetProfs   = Math.ceil(target_bpd / bpd);          // 10,000 at full productivity
+    const netNew        = Math.max(0, targetProfs - current);    // 5,500
+    const replacement   = Math.round(current * (1 - retention)); // 1,350
+    const monthlyGrowth = Math.ceil(netNew / months);            // 1,833
+    const totalRequired = replacement + monthlyGrowth;           // 3,183 unadjusted
+
+    // RAMP ADJUSTMENT
+    // The ramp penalty applies only to net new (growth) professionals, not replacements.
+    // Replacement professionals have prior experience and an unknown but different ramp curve.
+    // Applying the penalty to totalRequired would overstate the adjustment.
+    //
+    // Logic: during the ramp period, each net-new professional produces (rampRate × bpd) bookings/day
+    // instead of bpd. The output shortfall fraction per professional = (1 - rampRate).
+    // That shortfall persists for rampWeeks out of 4.33 weeks in the month (rampFraction).
+    // The extra professionals needed to cover that lost output:
+    //   rampAdj = monthlyGrowth × rampFraction × (1 - rampRate)
+    // This is a first-order approximation: how many additional fully-productive professionals
+    // would cover the booking deficit created by the growth cohort ramping up?
+    const rampFraction  = rampWeeks / weeksPerMonth;            // fraction of a month spent ramping
+    const rampAdj       = Math.ceil(monthlyGrowth * rampFraction * (1 - rampRate));
+    const adjRequired   = totalRequired + rampAdj;
+
+    // SUPPLY SIDE
+    const capacity = Math.round(centres * cohort * cycles * pass);
+    const gap      = adjRequired - capacity;
+
+    // Per-centre implications (against adjusted requirement)
+    const pcNeeded      = Math.ceil(adjRequired / centres);
+    const impliedCohort = Math.ceil(pcNeeded / cycles);
+    const impliedCycles = Math.ceil(pcNeeded / cohort);
+
+    // Classify status against adjusted requirement
+    const pct = capacity / adjRequired;
+    let status = 'critical';
+    if (pct >= 0.85) status = 'feasible';
+    else if (pct >= 0.55) status = 'warning';
+
+    // Context strip
+    if(document.getElementById('ctx-current')) document.getElementById('ctx-current').textContent = fmt(current);
+    document.getElementById('m-needed').textContent     = fmt(targetProfs);
+    document.getElementById('m-needed-sub').textContent = `at ${bpd} bookings/day (+ ${fmt(rampAdj)} ramp adj.)`;
+    document.getElementById('m-required').textContent   = fmt(adjRequired);
+    document.getElementById('m-capacity').textContent   = fmt(capacity);
+
+    // Ramp callout
+    const calloutText = document.getElementById('ramp-callout-text');
+    const rampBpd = Math.round(rampRate * bpd * 10) / 10;
+    calloutText.innerHTML = `Assuming newly onboarded professionals deliver at ${Math.round(rampRate * 100)}% utilisation for an initial ${rampWeeks}-week ramp period: that is <strong>${rampBpd} bookings/day</strong> instead of the ${bpd}-booking benchmark: each net-new professional contributes less output than a tenured one during that window.<br><br>The ramp penalty is applied only to the <strong>growth cohort</strong> (${fmt(monthlyGrowth)} professionals/month), not to replacement professionals, who have prior experience and a different ramp profile. This adds <strong>${fmt(rampAdj)} professionals/month</strong> to the requirement, raising it from ${fmt(totalRequired)} to <strong>${fmt(adjRequired)}/month</strong>. This is the conservative lower bound: if replacement professionals also ramp slowly, the true adjustment is higher.<br><br>This figure is unknown externally and has the highest impact on the gap. Replacing the ramp rate and ramp duration sliders with Pronto's actual onboarding data will produce a more precise output.`;
+
+    // LEVER COMPARISON
+    // Compute gap for each scenario using current ramp settings
+    function calcGap(sc) {
+      const cap = Math.round(sc.centres * sc.cohort * sc.cycles * (sc.pass/100));
+      const g   = adjRequired - cap;
+      return { gap: g, capacity: cap };
+    }
+
+    const leverScenarios = [
+      { label: 'Current settings', desc: `${centres} centres · ${cohort}/cohort · ${cycles} cycles`, centres, cohort, cycles, pass: Math.round(pass*100) },
+      { label: 'Double cohort size', desc: `${centres} centres · ${cohort*2}/cohort · ${cycles} cycles`, centres, cohort: cohort*2, cycles, pass: Math.round(pass*100) },
+      { label: 'Max cycle frequency', desc: `${centres} centres · ${cohort}/cohort · 7 cycles`, centres, cohort, cycles: 7, pass: Math.round(pass*100) },
+      { label: 'Add 8 centres', desc: `${centres+8} centres · ${cohort}/cohort · ${cycles} cycles`, centres: centres+8, cohort, cycles, pass: Math.round(pass*100) },
+    ];
+
+    const baseGap = calcGap(leverScenarios[0]).gap;
+    const leverResults = leverScenarios.map(s => ({ ...s, ...calcGap(s) }));
+    const bestIdx = leverResults.reduce((bi, r, i) => r.gap < leverResults[bi].gap ? i : bi, 0);
+
+    const leverGrid = document.getElementById('lever-grid');
+    leverGrid.innerHTML = leverResults.map((r, i) => {
+      const isBest = i === bestIdx && i !== 0;
+      const gapPct = Math.max(0, r.gap / adjRequired);
+      const reduction = i === 0 ? 0 : Math.round((1 - Math.max(0,r.gap) / Math.max(1,baseGap)) * 100);
+      const gapClass = r.gap <= 0 ? 'green-col' : (gapPct < 0.35 ? 'amber' : 'red');
+      const gapDisplay = r.gap <= 0 ? `+${fmt(Math.abs(r.gap))}` : `−${fmt(r.gap)}`;
+      const gapLabel = r.gap <= 0 ? 'surplus/month' : 'short/month';
+      const changeLabel = i === 0 ? 'Baseline' : (reduction > 0 ? `${reduction}% gap closed` : 'No change');
+      const changeClass = i === 0 ? 'neutral' : (reduction > 0 ? 'improvement' : 'neutral');
+      return `
+        <div class="lever-card${isBest ? ' best' : ''}">
+          ${isBest ? '<div class="best-badge">Best lever</div>' : ''}
+          <div class="lever-card-label">${r.label}</div>
+          <div class="lever-card-gap ${gapClass}">${gapDisplay}</div>
+          <div class="lever-card-unit">${gapLabel}</div>
+          <div class="lever-card-change ${changeClass}">${changeLabel}</div>
+        </div>`;
+    }).join('');
+
+    // Lever insight sentence
+    const insight = document.getElementById('lever-insight');
+    const bestResult = leverResults[bestIdx];
+    let insightReduction = 0;
+    if (bestIdx === 0) {
+      insight.innerHTML = `Under current settings, no single lever closes the gap. Combine cohort size and cycle frequency changes together - or adjust the sliders on the left to test combinations.`;
+    } else if (bestResult.gap <= 0) {
+      insightReduction = Math.round((1 - Math.max(0, bestResult.gap) / Math.max(1, baseGap)) * 100);
+      insight.innerHTML = `<strong>${leverScenarios[bestIdx].label}</strong> fully closes the gap under these settings - producing a surplus of ${fmt(Math.abs(bestResult.gap))} professionals/month. This is a governance or operational decision, not a capital one. Adjust the ramp sliders to stress-test this conclusion.`;
+    } else {
+      insightReduction = Math.round((1 - bestResult.gap / Math.max(1, baseGap)) * 100);
+      insight.innerHTML = `<strong>${leverScenarios[bestIdx].label}</strong> closes the most gap - reducing the shortfall by ${insightReduction}%, from ${fmt(baseGap)} to ${fmt(bestResult.gap)} professionals/month. No single lever fully closes the gap at these settings. Combine two levers, or adjust the ramp assumptions - they have the highest impact on this output.`;
+    }
+
+    // Breakdown (hidden by default)
+    if(document.getElementById('b-target-profs')) document.getElementById('b-target-profs').textContent = fmt(targetProfs);
+    if(document.getElementById('b-net-new')) document.getElementById('b-net-new').textContent       = fmt(netNew);
+    if(document.getElementById('b-replacement')) document.getElementById('b-replacement').textContent   = fmt(replacement);
+    if(document.getElementById('b-growth')) document.getElementById('b-growth').textContent        = fmt(monthlyGrowth);
+    if(document.getElementById('b-total-req')) document.getElementById('b-total-req').textContent     = fmt(totalRequired);
+
+    // Ramp sub-breakdown — show working transparently
+    if(document.getElementById('b-ramp-fraction'))  document.getElementById('b-ramp-fraction').textContent  = rampFraction.toFixed(2);
+    if(document.getElementById('b-ramp-shortfall')) document.getElementById('b-ramp-shortfall').textContent = Math.round((1 - rampRate) * 100) + '%';
+    if(document.getElementById('b-ramp-cohort'))    document.getElementById('b-ramp-cohort').textContent    = fmt(monthlyGrowth);
+    if(document.getElementById('b-ramp-adj'))       document.getElementById('b-ramp-adj').textContent       = '+' + fmt(rampAdj);
+    if(document.getElementById('b-ramp-adj-check')) document.getElementById('b-ramp-adj-check').textContent = '+' + fmt(rampAdj);
+
+    if(document.getElementById('b-adj-req')) document.getElementById('b-adj-req').textContent       = fmt(adjRequired);
+    if(document.getElementById('b-capacity')) document.getElementById('b-capacity').textContent      = fmt(capacity);
+
+    const gapEl = document.getElementById('b-gap');
+    if (gapEl) {
+      gapEl.textContent = gap > 0 ? '−' + fmt(gap) : '+' + fmt(Math.abs(gap));
+      gapEl.className   = gap > 0 ? 'breakdown-num danger' : 'breakdown-num highlight';
+    }
+
+    // Per centre
+    if(document.getElementById('pc-needed')) document.getElementById('pc-needed').textContent = fmt(pcNeeded);
+    if(document.getElementById('pc-cohort')) document.getElementById('pc-cohort').textContent = impliedCohort;
+    if(document.getElementById('pc-cycles')) document.getElementById('pc-cycles').textContent = impliedCycles;
+  }
+
+  // Init - defer until DOM is fully ready
+  document.addEventListener('DOMContentLoaded', update);
+
+  // Reset to verified defaults
+  function resetDefaults() {
+    document.getElementById('sl-current').value    = 4500;
+    document.getElementById('sl-retention').value  = 70;
+    document.getElementById('sl-bpd').value        = 7;
+    document.getElementById('sl-target').value     = 70000;
+    document.getElementById('sl-months').value     = 3;
+    document.getElementById('sl-centres').value    = 12;
+    document.getElementById('sl-cohort').value     = 20;
+    document.getElementById('sl-cycles').value     = 4;
+    document.getElementById('sl-pass').value       = 90;
+    document.getElementById('sl-ramp-weeks').value = 3;
+    document.getElementById('sl-ramp-rate').value  = 40;
+    // Deactivate scenario buttons
+    document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('.scenario-btn').classList.add('active');
+    update();
+  }
+
+  // Accordion
+  function toggleAcc(id) {
+    const item = document.getElementById('acc-' + id);
+    const isOpen = item.classList.contains('open');
+    // Close all
+    document.querySelectorAll('.accordion-item').forEach(el => el.classList.remove('open'));
+    // Open this one if it was closed
+    if (!isOpen) item.classList.add('open');
+  }
+</script>
+</body>
+</html>
